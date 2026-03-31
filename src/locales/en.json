@@ -1,0 +1,97 @@
+{
+  "nav": {
+    "home": "Home",
+    "myListings": "My Listings",
+    "add": "Add",
+    "profile": "Profile",
+    "login": "Login"
+  },
+  "landing": {
+    "title": "Direct from Farm to Table",
+    "subtitle": "Empowering local farmers and communities through direct exchange, selling, and giving.",
+    "explore": "Explore Marketplace",
+    "joinAsFarmer": "Join as Farmer",
+    "features": {
+      "marketplace": "Marketplace",
+      "marketplaceDesc": "Buy or sell fresh produce directly within your local community without middlemen.",
+      "exchange": "Exchange & Share",
+      "exchangeDesc": "Have excess harvest? Exchange it for something else or donate it to those in need for free.",
+      "location": "Location Based",
+      "locationDesc": "Find agricultural products within your preferred radius using smart geolocation."
+    }
+  },
+  "auth": {
+    "welcome": "Welcome Back",
+    "subtitle": "Join the local farming community and start exchanging fresh produce today.",
+    "phoneLabel": "Phone Number",
+    "loginButton": "Login with Phone",
+    "orContinue": "Or continue with",
+    "terms": "By continuing, you agree to our",
+    "termsLink": "Terms of Service"
+  },
+  "profile": {
+    "title": "Your Profile",
+    "phone": "Phone",
+    "location": "Location",
+    "bio": "Bio",
+    "edit": "Edit Profile",
+    "save": "Save Changes",
+    "signOut": "Sign Out",
+    "success": "Profile updated successfully!",
+    "joined": "Joined"
+  },
+  "listings": {
+    "title": "Your Active Listings",
+    "empty": "You don't have any products listed yet.",
+    "startSelling": "Start Selling",
+    "deleteConfirm": "Are you sure you want to delete this listing?"
+  },
+  "product": {
+    "category": "Category",
+    "quantity": "Quantity",
+    "unit": "Unit",
+    "listingType": "Listing Type",
+    "price": "Price (Rs.)",
+    "exchange": "Exchange Preference",
+    "description": "Description",
+    "publish": "Publish Product",
+    "update": "Update Product",
+    "addTitle": "Add Product",
+    "editTitle": "Edit Product",
+    "setLocation": "Set Location on Map",
+    "away": "away",
+    "free": "FREE DONATION",
+    "exchangeFor": "Exchange for:",
+    "uploadPhoto": "Upload Product Photo",
+    "tapToUpload": "Tap to upload photo",
+    "remove": "Remove"
+  },
+  "filters": {
+    "freshIn": "Fresh in",
+    "yourArea": "Your Area",
+    "searchPlaceholder": "Search vegetables, fruits...",
+    "allCategories": "All Categories",
+    "allTypes": "All Types",
+    "anyDistance": "Any Distance",
+    "within": "Within",
+    "km": "km",
+    "clear": "Clear Filters",
+    "noProducts": "No products found",
+    "noProductsDesc": "Try adjusting your filters or search query.",
+    "categories": {
+      "all": "All Categories",
+      "vegetables": "Vegetables",
+      "fruits": "Fruits",
+      "meat": "Meat",
+      "dairy": "Dairy",
+      "grains": "Grains",
+      "other": "Other"
+    },
+    "types": {
+      "all": "All Types",
+      "sell": "Sell",
+      "exchange": "Exchange",
+      "free": "Free"
+    }
+  }
+}
