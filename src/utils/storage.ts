@@ -62,6 +62,10 @@ export const findUserByPhone = (phone: string): UserProfile | undefined => {
   return getUsers().find((u) => u.phone === phone);
 };
 
+export const findUserById = (id: string): UserProfile | undefined => {
+  return getUsers().find((u) => u.id === id);
+};
+
 /**
  * Get all products (Phase 1 simplicity: still using Redux for state, 
  * but this helper can be used for persistent product management).

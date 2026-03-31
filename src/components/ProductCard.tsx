@@ -1,5 +1,6 @@
-import React from 'react';
-import { MapPin, Calendar, ShoppingCart, Repeat, Gift } from 'lucide-react';
+import { MapPin, Calendar, ShoppingCart, Repeat, Gift, Phone } from 'lucide-react';
+import { Link } from 'react-router-dom';
+
 import type { Product } from '../features/products/productSlice';
 import { calculateDistance, formatDistance } from '../utils/location';
 import { useAppSelector } from '../hooks/redux';
@@ -50,7 +51,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
   return (
     <div className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 flex flex-col h-full relative">
-      {/* Top Image Section */}
+      <Link to={`/product/${product.id}`} className="flex flex-col h-full">
+        {/* Top Image Section */}
+
       <div className="relative aspect-[4/3] sm:aspect-square overflow-hidden bg-gray-100">
         <img
           src={product.photos[0] || 'https://via.placeholder.com/400'}
@@ -61,13 +64,18 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         {/* distance badge */}
         {distance !== null && (
           <button 
-            onClick={() => setIsMapOpen(true)}
-            className="absolute top-2.5 left-2.5 bg-white/90 backdrop-blur-md px-2.5 py-1.5 rounded-full text-[10px] sm:text-xs font-bold text-gray-800 shadow-sm flex items-center space-x-1 hover:bg-primary-50 transition-colors active:scale-95 group/pin"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setIsMapOpen(true);
+            }}
+            className="absolute top-2.5 left-2.5 bg-white/90 backdrop-blur-md px-2.5 py-1.5 rounded-full text-[10px] sm:text-xs font-bold text-gray-800 shadow-sm flex items-center space-x-1 hover:bg-primary-50 transition-colors active:scale-95 group/pin z-10"
           >
             <MapPin size={11} className="text-primary-600" />
             <span>{formatDistance(distance)} {t('product.away')}</span>
           </button>
         )}
+
 
 
         {/* listing type badge */}
@@ -106,7 +114,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </div>
         </div>
 
-        <div className="pt-2">
+        <div className="pt-2 flex items-center justify-between">
           {product.listingType === 'sell' ? (
             <div className="text-lg sm:text-xl font-bold text-primary-700">
               Rs. {product.price}
@@ -114,15 +122,26 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             </div>
           ) : product.listingType === 'exchange' ? (
             <div className="text-xs sm:text-sm font-bold text-blue-600 italic">
-              {t('product.exchangeFor')} {product.exchangePreference}
+               {product.exchangePreference}
             </div>
           ) : (
             <div className="text-base sm:text-lg font-black text-green-600 uppercase tracking-tighter">
               {t('product.free')}
             </div>
           )}
+
+          <a 
+            href={`tel:${product.contactNumber}`}
+            onClick={(e) => e.stopPropagation()}
+            className="p-2.5 bg-primary-50 text-primary-600 rounded-xl hover:bg-primary-600 hover:text-white transition-all shadow-sm active:scale-95"
+            title="Call Seller"
+          >
+            <Phone size={18} />
+          </a>
         </div>
       </div>
+    </Link>
+
 
 
       <MapModal

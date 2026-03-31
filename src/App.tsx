@@ -10,6 +10,7 @@ import HomeFeed from './pages/HomeFeed';
 import UserProfile from './pages/UserProfile';
 import MyListings from './pages/MyListings';
 import AddEditProduct from './pages/AddEditProduct';
+import ProductDetails from './pages/ProductDetails';
 
 const App: React.FC = () => {
   return (
@@ -25,6 +26,7 @@ const App: React.FC = () => {
               <Route path="/my-listings" element={<MyListings />} />
               <Route path="/add-product" element={<AddEditProduct />} />
               <Route path="/edit-product/:id" element={<AddEditProduct />} />
+              <Route path="/product/:id" element={<ProductDetails />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Layout>

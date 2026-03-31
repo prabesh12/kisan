@@ -13,14 +13,17 @@ import { savePersistentProduct, deletePersistentProduct } from '../utils/storage
 
 
 
+
+
 const AddEditProduct: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const { items } = useAppSelector((state) => state.products);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
 
 
 
@@ -41,8 +44,10 @@ const AddEditProduct: React.FC = () => {
     coordinates: {
       lat: 27.7172,
       lng: 85.3240,
-    }
+    },
+    contactNumber: '',
   });
+
 
 
   const [error, setError] = useState<string | null>(null);
@@ -62,15 +67,19 @@ const AddEditProduct: React.FC = () => {
         photos: existingProduct.photos,
         city: existingProduct.location.city,
         coordinates: existingProduct.location.coordinates,
+        contactNumber: existingProduct.contactNumber || '',
       });
+
     } else if (user) {
       setFormData((prev) => ({ 
         ...prev, 
         city: user.location.city,
-        coordinates: user.location.coordinates
+        coordinates: user.location.coordinates,
+        contactNumber: user.phone
       }));
     }
   }, [isEditMode, existingProduct, user]);
+
 
 
   if (!user) {
@@ -112,8 +121,11 @@ const AddEditProduct: React.FC = () => {
           city: formData.city,
           coordinates: formData.coordinates,
         },
-
+        contactNumber: formData.contactNumber,
+        tags: formData.description.match(/#(\w+)/g)?.map(tag => tag.slice(1).toLowerCase()) || [],
         createdAt: isEditMode && existingProduct ? existingProduct.createdAt : new Date().toISOString(),
+        status: (isEditMode && existingProduct ? existingProduct.status : 'active') as 'active' | 'sold',
+        views: isEditMode && existingProduct ? existingProduct.views : 0,
       };
 
       // 3. Dispatch action and save to persistent storage
@@ -336,12 +348,30 @@ const AddEditProduct: React.FC = () => {
             <textarea
               required
               rows={4}
-              placeholder={t('landing.subtitle')}
+              placeholder={`${t('landing.subtitle')} #organic #fresh #kathmandu`}
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl shadow-sm focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all placeholder:text-gray-400 font-bold resize-none"
             />
           </div>
+
+          <div className="md:col-span-2 border-t border-gray-50 pt-8">
+            <label className="block text-sm font-bold text-gray-700 ml-1 mb-2 uppercase tracking-widest">
+              {t('auth.phoneLabel')}
+            </label>
+            <input
+              type="tel"
+              required
+              placeholder="98XXXXXXXX"
+              value={formData.contactNumber}
+              onChange={(e) => setFormData({ ...formData, contactNumber: e.target.value })}
+              className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl shadow-sm focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all placeholder:text-gray-400 font-bold"
+            />
+             <p className="mt-2 text-[10px] sm:text-xs text-gray-400 font-medium px-1">
+                {i18n.language === 'en' ? 'Buyers will use this number to contact you directly.' : 'खरीदकर्ताहरूले तपाईंलाई सिधै सम्पर्क गर्न यो नम्बर प्रयोग गर्नेछन्।'}
+             </p>
+          </div>
+
 
 
           <div className="md:col-span-2">

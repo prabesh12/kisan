@@ -23,7 +23,10 @@ export const MOCK_PRODUCTS: Product[] = [
     createdAt: new Date().toISOString(),
     status: 'active',
     views: 45,
+    contactNumber: '9841234567',
+    tags: ['organic', 'fresh', 'kathmandu'],
   },
+
 
   {
     id: 'p2',
@@ -43,7 +46,10 @@ export const MOCK_PRODUCTS: Product[] = [
     createdAt: new Date().toISOString(),
     status: 'active',
     views: 12,
+    contactNumber: '9851000000',
+    tags: ['dairy', 'free', 'nepal'],
   },
+
 
   {
     id: 'p3',
@@ -64,7 +70,10 @@ export const MOCK_PRODUCTS: Product[] = [
     createdAt: new Date(Date.now() - 86400000).toISOString(),
     status: 'active',
     views: 89,
+    contactNumber: '9861000000',
+    tags: ['grains', 'exchange', 'farm'],
   },
+
 
 ];
 

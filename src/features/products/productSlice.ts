@@ -27,6 +27,8 @@ export interface Product {
   createdAt: string;
   status: 'active' | 'sold';
   views: number;
+  contactNumber: string;
+  tags: string[];
 }
 
 interface ProductState {

@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo } from 'react';
 import { useAppSelector, useAppDispatch } from '../hooks/redux';
+import { useSearchParams } from 'react-router-dom';
+
 import { setProducts } from '../features/products/productSlice';
 import { getPersistentProducts } from '../utils/storage';
 import ProductCard from '../components/ProductCard';
@@ -21,12 +23,22 @@ const HomeFeed: React.FC = () => {
 
 
 
+  const [searchParams] = useSearchParams();
+
   useEffect(() => {
     // If store is empty, seed with persistent data
     if (items.length === 0) {
       dispatch(setProducts(getPersistentProducts()));
     }
   }, [dispatch, items.length]);
+
+  useEffect(() => {
+    const query = searchParams.get('search');
+    if (query) {
+      dispatch(setSearchQuery(query));
+    }
+  }, [searchParams, dispatch]);
+
 
 
   const filteredProducts = useMemo(() => {
@@ -41,8 +53,17 @@ const HomeFeed: React.FC = () => {
       if (listingType !== 'all' && product.listingType !== listingType) return false;
 
       // Search query filter
-      if (searchQuery && !product.name.toLowerCase().includes(searchQuery.toLowerCase()) && 
-          !product.description.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        if (query.startsWith('#')) {
+          const tagTrigger = query.slice(1);
+          if (!product.tags?.some(tag => tag.toLowerCase().includes(tagTrigger))) return false;
+        } else {
+          if (!product.name.toLowerCase().includes(query) && 
+              !product.description.toLowerCase().includes(query)) return false;
+        }
+      }
+
 
       // Radius filter
       if (radius !== 'all' && user?.location.coordinates) {
