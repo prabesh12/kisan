@@ -21,7 +21,10 @@ export const MOCK_PRODUCTS: Product[] = [
       coordinates: { lat: 27.7172, lng: 85.3240 },
     },
     createdAt: new Date().toISOString(),
+    status: 'active',
+    views: 45,
   },
+
   {
     id: 'p2',
     sellerId: 'u2',
@@ -38,7 +41,10 @@ export const MOCK_PRODUCTS: Product[] = [
       coordinates: { lat: 27.6744, lng: 85.3240 },
     },
     createdAt: new Date().toISOString(),
+    status: 'active',
+    views: 12,
   },
+
   {
     id: 'p3',
     sellerId: 'u3',
@@ -56,7 +62,10 @@ export const MOCK_PRODUCTS: Product[] = [
       coordinates: { lat: 27.6710, lng: 85.4298 },
     },
     createdAt: new Date(Date.now() - 86400000).toISOString(),
+    status: 'active',
+    views: 89,
   },
+
 ];
 
 export const MOCK_USER = {

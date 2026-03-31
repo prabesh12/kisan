@@ -5,7 +5,8 @@ import { getPersistentProducts } from '../utils/storage';
 import ProductCard from '../components/ProductCard';
 
 import { Filter, Search, Map as MapIcon, SlidersHorizontal } from 'lucide-react';
-import { setCategory, setListingType, setRadius, setSearchQuery, resetFilters } from '../features/filters/filterSlice';
+import { setCategory, setListingType, setRadius, setSearchQuery, setSortBy, resetFilters } from '../features/filters/filterSlice';
+
 import { calculateDistance } from '../utils/location';
 import type { Category, ListingType } from '../features/products/productSlice';
 import { useTranslation } from 'react-i18next';
@@ -15,8 +16,9 @@ const HomeFeed: React.FC = () => {
   const dispatch = useAppDispatch();
   const { items } = useAppSelector((state) => state.products);
   const { user } = useAppSelector((state) => state.auth);
-  const { category, listingType, radius, searchQuery } = useAppSelector((state) => state.filters);
+  const { category, listingType, radius, searchQuery, sortBy } = useAppSelector((state) => state.filters);
   const { t } = useTranslation();
+
 
 
   useEffect(() => {
@@ -28,7 +30,10 @@ const HomeFeed: React.FC = () => {
 
 
   const filteredProducts = useMemo(() => {
-    return items.filter((product) => {
+    let result = items.filter((product) => {
+      // Phase 2: Filter out SOLD items completely
+      if (product.status === 'sold') return false;
+
       // Category filter
       if (category !== 'all' && product.category !== category) return false;
 
@@ -47,7 +52,29 @@ const HomeFeed: React.FC = () => {
 
       return true;
     });
-  }, [items, category, listingType, radius, searchQuery, user]);
+
+    // Phase 2: Global Sorting
+    return [...result].sort((a, b) => {
+      if (sortBy === 'newest') {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
+      
+      if (sortBy === 'price-low') {
+        const priceA = a.listingType === 'sell' ? (a.price || 0) : 0;
+        const priceB = b.listingType === 'sell' ? (b.price || 0) : 0;
+        return priceA - priceB;
+      }
+
+      if (sortBy === 'closest' && user?.location.coordinates) {
+        const distA = calculateDistance(user.location.coordinates, a.location.coordinates);
+        const distB = calculateDistance(user.location.coordinates, b.location.coordinates);
+        return distA - distB;
+      }
+
+      return 0;
+    });
+  }, [items, category, listingType, radius, searchQuery, sortBy, user]);
+
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -123,6 +150,20 @@ const HomeFeed: React.FC = () => {
               <option value="50">{t('filters.within')} 50{t('filters.km')}</option>
             </select>
           </div>
+
+          {/* Sort By Dropdown */}
+          <div className="flex-shrink-0">
+            <select
+              value={sortBy}
+              onChange={(e) => dispatch(setSortBy(e.target.value as any))}
+              className="bg-primary-50 border-2 border-primary-100 rounded-xl px-4 py-2 font-bold text-primary-700 focus:border-primary-500 outline-none shadow-sm cursor-pointer transition-all text-sm appearance-none min-w-[150px]"
+            >
+              <option value="newest">✨ {t('filters.sort.newest')}</option>
+              <option value="price-low">💰 {t('filters.sort.priceLow')}</option>
+              <option value="closest">📍 {t('filters.sort.closest')}</option>
+            </select>
+          </div>
+
 
           {(category !== 'all' || listingType !== 'all' || radius !== 'all' || searchQuery) && (
             <div className="flex-shrink-0">

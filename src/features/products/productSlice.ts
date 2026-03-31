@@ -25,6 +25,8 @@ export interface Product {
     };
   };
   createdAt: string;
+  status: 'active' | 'sold';
+  views: number;
 }
 
 interface ProductState {
@@ -43,12 +45,28 @@ const productSlice = createSlice({
       state.items = action.payload;
     },
     addProduct: (state, action: PayloadAction<Product>) => {
-      state.items.unshift(action.payload);
+      state.items.unshift({
+        ...action.payload,
+        status: 'active',
+        views: 0
+      });
     },
     updateProduct: (state, action: PayloadAction<Product>) => {
       const index = state.items.findIndex((p) => p.id === action.payload.id);
       if (index !== -1) {
         state.items[index] = action.payload;
+      }
+    },
+    setSoldStatus: (state, action: PayloadAction<{ id: string; status: 'active' | 'sold' }>) => {
+      const product = state.items.find((p) => p.id === action.payload.id);
+      if (product) {
+        product.status = action.payload.status;
+      }
+    },
+    incrementProductViews: (state, action: PayloadAction<string>) => {
+      const product = state.items.find((p) => p.id === action.payload);
+      if (product) {
+        product.views += 1;
       }
     },
     deleteProduct: (state, action: PayloadAction<string>) => {
@@ -57,5 +75,13 @@ const productSlice = createSlice({
   },
 });
 
-export const { setProducts, addProduct, updateProduct, deleteProduct } = productSlice.actions;
+export const { 
+  setProducts, 
+  addProduct, 
+  updateProduct, 
+  deleteProduct, 
+  setSoldStatus, 
+  incrementProductViews 
+} = productSlice.actions;
+
 export default productSlice.reducer;

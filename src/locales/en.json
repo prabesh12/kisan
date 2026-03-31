@@ -41,11 +41,19 @@
     "joined": "Joined"
   },
   "listings": {
-    "title": "Your Active Listings",
+    "title": "Seller Hub",
+    "active": "Your Active Listings",
     "empty": "You don't have any products listed yet.",
     "startSelling": "Start Selling",
-    "deleteConfirm": "Are you sure you want to delete this listing?"
+    "markAsSold": "Mark as Sold",
+    "deleteConfirm": "Are you sure you want to delete this listing?",
+    "stats": {
+      "active": "Active Listings",
+      "sold": "Items Sold",
+      "views": "Total Views"
+    }
   },
+
   "product": {
     "category": "Category",
     "quantity": "Quantity",
@@ -76,6 +84,12 @@
     "within": "Within",
     "km": "km",
     "clear": "Clear Filters",
+    "sort": {
+      "newest": "Newest Arrival",
+      "priceLow": "Price: Low to High",
+      "closest": "Distance: Closest First"
+    },
+
     "noProducts": "No products found",
     "noProductsDesc": "Try adjusting your filters or search query.",
     "categories": {

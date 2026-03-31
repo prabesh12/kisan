@@ -7,6 +7,7 @@ interface FilterState {
   listingType: ListingType | 'all';
   radius: number | 'all'; // in km
   searchQuery: string;
+  sortBy: 'newest' | 'price-low' | 'closest';
 }
 
 const initialState: FilterState = {
@@ -14,6 +15,7 @@ const initialState: FilterState = {
   listingType: 'all',
   radius: 'all',
   searchQuery: '',
+  sortBy: 'newest',
 };
 
 const filterSlice = createSlice({
@@ -32,9 +34,13 @@ const filterSlice = createSlice({
     setSearchQuery: (state, action: PayloadAction<string>) => {
       state.searchQuery = action.payload;
     },
+    setSortBy: (state, action: PayloadAction<'newest' | 'price-low' | 'closest'>) => {
+      state.sortBy = action.payload;
+    },
     resetFilters: () => initialState,
   },
 });
 
-export const { setCategory, setListingType, setRadius, setSearchQuery, resetFilters } = filterSlice.actions;
+export const { setCategory, setListingType, setRadius, setSearchQuery, setSortBy, resetFilters } = filterSlice.actions;
+
 export default filterSlice.reducer;
