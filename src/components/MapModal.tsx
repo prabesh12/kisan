@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet-routing-machine';
@@ -58,12 +59,14 @@ const RoutingMachine = ({ buyerLat, buyerLng, sellerLat, sellerLng }: { buyerLat
     }).addTo(map);
 
     return () => {
-      try {
-        if (map && routingControl) {
+      if (map && routingControl) {
+        try {
+          // Set waypoints to empty to cancel pending requests
+          routingControl.setWaypoints([]);
           map.removeControl(routingControl);
+        } catch (e) {
+          console.warn('Routing cleanup error:', e);
         }
-      } catch (e) {
-        console.error(e);
       }
     };
   }, [map, buyerLat, buyerLng, sellerLat, sellerLng]);
@@ -74,30 +77,30 @@ const RoutingMachine = ({ buyerLat, buyerLng, sellerLat, sellerLng }: { buyerLat
 const MapModal: React.FC<MapModalProps> = ({ isOpen, onClose, lat, lng, title, locationName, buyerLat, buyerLng }) => {
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+  const modalContent = (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-8">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       
-      <div className="relative bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-        <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="p-2 bg-primary-100 rounded-xl text-primary-600">
-              <MapPin size={20} />
+      <div className="relative bg-white w-full max-w-5xl rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col h-[85vh] max-h-[900px]">
+        <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-white shrink-0">
+          <div className="flex items-center space-x-3">
+            <div className="p-3 bg-primary-50 rounded-2xl text-primary-600">
+              <MapPin size={24} />
             </div>
             <div>
-              <h3 className="font-bold text-gray-900 leading-tight">{title}</h3>
-              {locationName && <p className="text-xs text-gray-500 font-medium">{locationName}</p>}
+              <h3 className="font-black text-gray-900 leading-tight text-xl">{title}</h3>
+              {locationName && <p className="text-sm text-gray-500 font-bold uppercase tracking-widest">{locationName}</p>}
             </div>
           </div>
           <button 
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors transition-transform active:scale-90"
+            className="p-3 hover:bg-gray-100 rounded-2xl transition-colors transition-transform active:scale-90 bg-gray-50"
           >
-            <X size={20} className="text-gray-400" />
+            <X size={24} className="text-gray-400" />
           </button>
         </div>
 
-        <div className="h-[400px] w-full">
+        <div className="flex-1 w-full bg-gray-100 relative min-h-0">
           <MapContainer
             center={buyerLat && buyerLng ? [(lat + buyerLat) / 2, (lng + buyerLng) / 2] : [lat, lng]}
             zoom={buyerLat && buyerLng ? 12 : 15}
@@ -133,7 +136,7 @@ const MapModal: React.FC<MapModalProps> = ({ isOpen, onClose, lat, lng, title, l
           </MapContainer>
         </div>
         
-        <div className="p-4 bg-gray-50 flex items-center justify-between gap-4">
+        <div className="p-6 bg-white border-t border-gray-100 flex items-center justify-between gap-4 shrink-0">
           <a
             href={
               buyerLat && buyerLng
@@ -142,14 +145,14 @@ const MapModal: React.FC<MapModalProps> = ({ isOpen, onClose, lat, lng, title, l
             }
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center space-x-2 bg-white border-2 border-primary-200 text-primary-700 font-bold px-6 py-2.5 rounded-xl shadow-sm hover:bg-primary-50 transition-all active:scale-95 flex-1"
+            className="flex items-center justify-center space-x-3 bg-primary-600 text-white font-black px-8 py-4 rounded-2xl shadow-xl shadow-primary-200 hover:bg-primary-700 transition-all active:scale-95 flex-1 text-lg"
           >
-            <MapPin size={18} />
-            <span>Open in Google Maps</span>
+            <MapPin size={20} />
+            <span>Navigate in Google Maps</span>
           </a>
           <button 
             onClick={onClose}
-            className="bg-gray-200 text-gray-700 font-bold px-8 py-2.5 rounded-xl hover:bg-gray-300 transition-all active:scale-95"
+            className="bg-gray-100 text-gray-700 font-bold px-10 py-4 rounded-2xl hover:bg-gray-200 transition-all active:scale-95"
           >
             Close
           </button>
@@ -157,6 +160,8 @@ const MapModal: React.FC<MapModalProps> = ({ isOpen, onClose, lat, lng, title, l
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 };
 
 export default MapModal;

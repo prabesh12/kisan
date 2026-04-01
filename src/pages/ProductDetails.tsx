@@ -18,6 +18,8 @@ import { findUserById } from '../utils/storage';
 import { incrementProductViews } from '../features/products/productSlice';
 import { useEffect } from 'react';
 import MapModal from '../components/MapModal';
+import PageTransition from '../components/PageTransition';
+import { CheckCircle2 } from 'lucide-react';
 
 const ProductDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -80,7 +82,8 @@ const ProductDetails: React.FC = () => {
   };
 
   return (
-    <div className="pb-32 animate-in fade-in duration-500">
+    <PageTransition>
+      <div className="pb-32">
       {/* Mobile Top Navigation */}
       <div className="fixed top-0 left-0 right-0 z-50 px-4 py-4 flex items-center justify-between pointer-events-none">
         <button 
@@ -98,12 +101,22 @@ const ProductDetails: React.FC = () => {
       </div>
 
       {/* Hero Image Section */}
-      <div className="relative aspect-[4/5] sm:aspect-video w-full overflow-hidden sm:rounded-[3rem] sm:mt-4">
+      <div className="relative aspect-[4/5] sm:aspect-video w-full overflow-hidden sm:rounded-2xl sm:mt-4">
         <img 
           src={product.photos[activeImage]} 
           alt={product.name}
-          className="w-full h-full object-cover"
+          className={`w-full h-full object-cover transition-all duration-700 ${product.status === 'sold' ? 'grayscale opacity-80' : ''}`}
         />
+        
+        {/* Sold Overlay */}
+        {product.status === 'sold' && (
+          <div className="absolute inset-0 bg-black/20 flex items-center justify-center p-12">
+             <div className="bg-white/90 backdrop-blur-md px-8 py-3 rounded-full shadow-2xl border-4 border-green-600 text-green-700 font-black text-2xl uppercase tracking-[0.3em] rotate-[-12deg] flex items-center space-x-3">
+                <CheckCircle2 size={24} />
+                <span>Sold</span>
+             </div>
+          </div>
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
         
         {/* Image Indicators */}
@@ -159,7 +172,7 @@ const ProductDetails: React.FC = () => {
              </div>
              
              {product.listingType === 'exchange' && (
-                <div className="bg-orange-50 border-2 border-orange-100 p-4 rounded-2xl">
+                <div className="bg-orange-50 border-2 border-orange-100 p-4 rounded-xl">
                    <div className="text-orange-600 font-black uppercase tracking-widest text-[10px] mb-1">{t('product.exchangeFor')}</div>
                    <div className="text-orange-900 font-bold text-lg">{product.exchangePreference}</div>
                 </div>
@@ -210,7 +223,7 @@ const ProductDetails: React.FC = () => {
         </div>
 
         {/* Seller Profile Card */}
-        <div className="bg-white rounded-[3rem] border-2 border-gray-100 p-8 shadow-sm space-y-8">
+        <div className="bg-white rounded-2xl border-2 border-gray-100 p-8 shadow-sm space-y-8">
            <div className="flex items-center justify-between">
               <h3 className="font-black text-gray-900 uppercase tracking-widest text-sm">{t('profile.title')}</h3>
               <div className="flex items-center space-x-1 text-primary-600 font-black text-sm">
@@ -221,9 +234,9 @@ const ProductDetails: React.FC = () => {
 
            <Link 
              to={`/seller/${product.sellerId}`}
-             className="flex items-center space-x-6 hover:bg-gray-50 p-4 -m-4 rounded-[2.5rem] transition-all group"
+             className="flex items-center space-x-6 hover:bg-gray-50 p-4 -m-4 rounded-xl transition-all group"
            >
-              <div className="w-24 h-24 rounded-[2rem] overflow-hidden border-4 border-primary-50 shadow-xl group-hover:border-primary-200 transition-all">
+              <div className="w-24 h-24 rounded-xl overflow-hidden border-4 border-primary-50 shadow-xl group-hover:border-primary-200 transition-all">
                  <img 
                    src={seller?.profilePhoto || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=200'} 
                    className="w-full h-full object-cover" 
@@ -256,7 +269,7 @@ const ProductDetails: React.FC = () => {
                 <a 
                   key={idx}
                   href={`tel:${num}`}
-                  className="flex items-center justify-center space-x-2 py-4 bg-primary-50 hover:bg-primary-100 text-primary-700 font-bold rounded-2xl transition-all active:scale-95"
+                  className="flex items-center justify-center space-x-2 py-4 bg-primary-50 hover:bg-primary-100 text-primary-700 font-bold rounded-xl transition-all active:scale-95"
                 >
                    <Phone size={20} />
                    <span>{t('auth.phoneLabel')} {idx > 0 ? idx + 1 : ''}</span>
@@ -264,7 +277,7 @@ const ProductDetails: React.FC = () => {
               ))}
               <button 
                 onClick={() => setIsMapModalOpen(true)}
-                className="flex items-center justify-center space-x-2 py-4 bg-gray-50 hover:bg-gray-100 text-gray-700 font-bold rounded-2xl transition-all active:scale-95"
+                className="flex items-center justify-center space-x-2 py-4 bg-gray-50 hover:bg-gray-100 text-gray-700 font-bold rounded-xl transition-all active:scale-95"
               >
                  <MapPin size={20} className="text-primary-500" />
                  <span>{t('product.viewMap')}</span>
@@ -285,7 +298,7 @@ const ProductDetails: React.FC = () => {
             </div>
             <a 
                href={`tel:${product.contactNumbers?.[0] || (product as any).contactNumber || ''}`}
-               className="bg-primary-600 text-white px-8 py-4 rounded-2xl font-bold flex items-center justify-center space-x-2 shadow-xl active:scale-95 transition-all flex-[2]"
+               className="bg-primary-600 text-white px-8 py-4 rounded-xl font-bold flex items-center justify-center space-x-2 shadow-xl active:scale-95 transition-all flex-[2]"
             >
                <Phone size={20} />
                <span>{t('product.callSeller')}</span>
@@ -303,7 +316,8 @@ const ProductDetails: React.FC = () => {
         buyerLat={userCoords?.lat}
         buyerLng={userCoords?.lng}
       />
-    </div>
+      </div>
+    </PageTransition>
   );
 };
 

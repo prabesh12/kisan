@@ -8,6 +8,8 @@ interface FilterState {
   radius: number | 'all'; // in km
   searchQuery: string;
   sortBy: 'newest' | 'price-low' | 'closest';
+  minPrice: number | null;
+  maxPrice: number | null;
 }
 
 const initialState: FilterState = {
@@ -16,6 +18,8 @@ const initialState: FilterState = {
   radius: 'all',
   searchQuery: '',
   sortBy: 'newest',
+  minPrice: null,
+  maxPrice: null,
 };
 
 const filterSlice = createSlice({
@@ -45,10 +49,22 @@ const filterSlice = createSlice({
     setSortBy: (state, action: PayloadAction<'newest' | 'price-low' | 'closest'>) => {
       state.sortBy = action.payload;
     },
+    setPriceRange: (state, action: PayloadAction<{ min: number | null; max: number | null }>) => {
+      state.minPrice = action.payload.min;
+      state.maxPrice = action.payload.max;
+    },
     resetFilters: () => initialState,
   },
 });
 
-export const { toggleCategory, toggleListingType, setRadius, setSearchQuery, setSortBy, resetFilters } = filterSlice.actions;
+export const { 
+  toggleCategory, 
+  toggleListingType, 
+  setRadius, 
+  setSearchQuery, 
+  setSortBy, 
+  setPriceRange,
+  resetFilters 
+} = filterSlice.actions;
 
 export default filterSlice.reducer;

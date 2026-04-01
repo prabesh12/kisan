@@ -15,6 +15,9 @@ import {
 import { findUserById } from '../utils/storage';
 import ProductCard from '../components/ProductCard';
 import { useTranslation } from 'react-i18next';
+import PageTransition from '../components/PageTransition';
+import { motion } from 'framer-motion';
+import type { Variants } from 'framer-motion';
 
 const PublicProfile: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -43,10 +46,33 @@ const PublicProfile: React.FC = () => {
     );
   }
 
+  const containerVariants: Variants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants: Variants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: 'spring',
+        stiffness: 100
+      }
+    }
+  };
+
   return (
-    <div className="pb-24 animate-in fade-in duration-500">
+    <PageTransition>
+      <div className="pb-24">
       {/* Premium Header */}
-      <div className="relative h-64 sm:h-80 -mt-6 sm:-mt-8 -mx-4 sm:-mx-0 overflow-hidden sm:rounded-b-[4rem]">
+      <div className="relative h-64 sm:h-80 -mt-6 sm:-mt-8 -mx-4 sm:-mx-0 overflow-hidden sm:rounded-b-3xl">
         <img 
           src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=1200" 
           className="w-full h-full object-cover brightness-50"
@@ -95,7 +121,7 @@ const PublicProfile: React.FC = () => {
         </div>
 
         {/* Farmer Bio */}
-        <div className="bg-white p-8 rounded-[3rem] border border-gray-100 shadow-sm relative overflow-hidden group">
+        <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden group">
            <div className="absolute top-0 right-0 w-32 h-32 bg-primary-50 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-110" />
            <p className="text-xl text-gray-600 font-medium leading-relaxed italic relative z-10">
               "{seller.bio || 'Experienced farmer dedicated to providing high-quality agricultural products to the community.'}"
@@ -113,18 +139,23 @@ const PublicProfile: React.FC = () => {
         </div>
 
         {/* Stats Section */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-           <div className="bg-white p-6 rounded-3xl border border-gray-100 flex flex-col items-center space-y-1 shadow-sm">
+        <motion.div 
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="grid grid-cols-2 md:grid-cols-4 gap-4"
+        >
+           <motion.div variants={itemVariants} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col items-center space-y-1">
               <Package size={24} className="text-primary-600 mb-1" />
               <div className="text-2xl font-black text-primary-900">{sellerProducts.length}</div>
               <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest underline decoration-primary-200">{t('profile.activeListings')}</div>
-           </div>
-           <div className="bg-white p-6 rounded-3xl border border-gray-100 flex flex-col items-center space-y-1 shadow-sm">
+           </motion.div>
+           <motion.div variants={itemVariants} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col items-center space-y-1">
               <TrendingUp size={24} className="text-primary-600 mb-1" />
               <div className="text-2xl font-black text-primary-900">{totalViews}</div>
               <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest underline decoration-primary-200">{t('profile.productViews')}</div>
-           </div>
-           <div className="bg-primary-600 p-6 rounded-3xl flex flex-col items-center justify-center space-y-1 shadow-lg shadow-primary-100 col-span-2">
+           </motion.div>
+           <motion.div variants={itemVariants} className="bg-primary-600 p-6 rounded-2xl flex flex-col items-center justify-center space-y-1 shadow-lg shadow-primary-100 col-span-2">
               <a 
                 href={`tel:${seller.phone}`}
                 className="flex items-center space-x-3 text-white font-black text-xl active:scale-95 transition-transform"
@@ -132,8 +163,8 @@ const PublicProfile: React.FC = () => {
                  <Phone size={24} />
                  <span>{t('profile.contactFarmer')}</span>
               </a>
-           </div>
-        </div>
+           </motion.div>
+        </motion.div>
 
         {/* Listings Section */}
         <div className="space-y-8 pt-6">
@@ -145,13 +176,20 @@ const PublicProfile: React.FC = () => {
            </div>
 
            {sellerProducts.length > 0 ? (
-             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pb-12">
+             <motion.div 
+               variants={containerVariants}
+               initial="hidden"
+               animate="visible"
+               className="grid grid-cols-1 sm:grid-cols-2 gap-6 pb-12"
+             >
                 {sellerProducts.map(product => (
-                  <ProductCard key={product.id} product={product} />
+                  <motion.div variants={itemVariants} key={product.id}>
+                    <ProductCard product={product} />
+                  </motion.div>
                 ))}
-             </div>
+             </motion.div>
            ) : (
-             <div className="py-20 bg-gray-50 rounded-[3rem] border-2 border-dashed border-gray-200 text-center space-y-4">
+             <div className="py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 text-center space-y-4">
                 <Package size={48} className="mx-auto text-gray-300" />
                 <div className="space-y-1">
                    <h3 className="font-bold text-gray-900">{t('profile.noListings')}</h3>
@@ -161,7 +199,8 @@ const PublicProfile: React.FC = () => {
            )}
         </div>
       </div>
-    </div>
+      </div>
+    </PageTransition>
   );
 };
 

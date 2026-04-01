@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from '../hooks/redux';
-import { toggleCategory, toggleListingType, setRadius, setSortBy, resetFilters } from '../features/filters/filterSlice';
+import { toggleCategory, toggleListingType, setRadius, setSortBy, resetFilters, setPriceRange } from '../features/filters/filterSlice';
 import type { Category, ListingType } from '../features/products/productSlice';
 import { ChevronDown, Crosshair, MapPin } from 'lucide-react';
 import { clsx } from 'clsx';
@@ -14,7 +14,7 @@ function cn(...inputs: (string | undefined | null | false)[]) {
 const FilterSidebar: React.FC = () => {
   const dispatch = useAppDispatch();
   const { t } = useTranslation();
-  const { categories, listingTypes, radius, sortBy } = useAppSelector((state) => state.filters);
+  const { categories, listingTypes, radius, sortBy, minPrice, maxPrice } = useAppSelector((state) => state.filters);
 
   return (
     <div className="flex flex-col space-y-6">
@@ -90,10 +90,47 @@ const FilterSidebar: React.FC = () => {
         </div>
       </div>
 
+      {/* Price Range Section */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h4 className="font-semibold text-gray-900 text-[15px]">Price Range (Rs.)</h4>
+          {(minPrice !== null || maxPrice !== null) && (
+            <button 
+              onClick={() => dispatch(setPriceRange({ min: null, max: null }))}
+              className="text-[10px] font-black text-primary-600 uppercase tracking-widest hover:underline"
+            >
+              Reset
+            </button>
+          )}
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="relative group">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-400 group-focus-within:text-primary-500 transition-colors">MIN</span>
+            <input
+              type="number"
+              placeholder="0"
+              value={minPrice || ''}
+              onChange={(e) => dispatch(setPriceRange({ min: e.target.value ? Number(e.target.value) : null, max: maxPrice }))}
+              className="w-full bg-gray-50/50 border-2 border-gray-100 rounded-xl pl-10 pr-3 py-2.5 text-[13px] font-bold text-gray-700 focus:outline-none focus:border-primary-500 focus:bg-white transition-all placeholder:text-gray-300 placeholder:font-normal"
+            />
+          </div>
+          <div className="relative group">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-400 group-focus-within:text-primary-500 transition-colors">MAX</span>
+            <input
+              type="number"
+              placeholder="10K+"
+              value={maxPrice || ''}
+              onChange={(e) => dispatch(setPriceRange({ min: minPrice, max: e.target.value ? Number(e.target.value) : null }))}
+              className="w-full bg-gray-50/50 border-2 border-gray-100 rounded-xl pl-10 pr-3 py-2.5 text-[13px] font-bold text-gray-700 focus:outline-none focus:border-primary-500 focus:bg-white transition-all placeholder:text-gray-300 placeholder:font-normal"
+            />
+          </div>
+        </div>
+      </div>
+
       <div className="h-px bg-gray-100 w-full" />
 
       {/* Distance Section */}
-      <div className="space-y-3">
+      <div className="space-y-3 text-left">
         <h4 className="font-semibold text-gray-900 text-[15px]">Location & Distance</h4>
         <div className="relative">
           <select
@@ -109,7 +146,7 @@ const FilterSidebar: React.FC = () => {
           </select>
           <Crosshair size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
         </div>
-        <p className="text-xs text-gray-400 mt-1">Pick a radius from your location</p>
+        <p className="text-[10px] text-gray-400 mt-1 uppercase tracking-widest font-bold">Radius from your location</p>
       </div>
 
     </div>
