@@ -13,13 +13,16 @@ import AddEditProduct from './pages/AddEditProduct';
 import ProductDetails from './pages/ProductDetails';
 import PublicProfile from './pages/PublicProfile';
 
+import LocationProvider from './components/LocationProvider';
+
 const App: React.FC = () => {
   return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
-        <Router>
-          <Layout>
-            <Routes>
+        <LocationProvider>
+          <Router>
+            <Layout>
+              <Routes>
               <Route path="/" element={<Landing />} />
               <Route path="/login" element={<LoginSignup />} />
               <Route path="/home" element={<HomeFeed />} />
@@ -33,9 +36,10 @@ const App: React.FC = () => {
             </Routes>
           </Layout>
         </Router>
-      </PersistGate>
-    </Provider>
-  );
+      </LocationProvider>
+    </PersistGate>
+  </Provider>
+);
 };
 
 export default App;

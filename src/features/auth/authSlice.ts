@@ -21,11 +21,16 @@ interface UserProfile {
 interface AuthState {
   user: UserProfile | null;
   isAuthenticated: boolean;
+  guestLocation: {
+    lat: number;
+    lng: number;
+  } | null;
 }
 
 const initialState: AuthState = {
   user: null,
   isAuthenticated: false,
+  guestLocation: null,
 };
 
 const authSlice = createSlice({
@@ -45,8 +50,15 @@ const authSlice = createSlice({
         state.user = { ...state.user, ...action.payload };
       }
     },
+    setLocation: (state, action: PayloadAction<{ lat: number; lng: number }>) => {
+      if (state.user) {
+        state.user.location.coordinates = action.payload;
+      } else {
+        state.guestLocation = action.payload;
+      }
+    },
   },
 });
 
-export const { login, logout, updateProfile } = authSlice.actions;
+export const { login, logout, updateProfile, setLocation } = authSlice.actions;
 export default authSlice.reducer;

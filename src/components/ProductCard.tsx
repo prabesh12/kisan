@@ -14,14 +14,15 @@ interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-  const { user } = useAppSelector((state) => state.auth);
+  const { user, guestLocation } = useAppSelector((state) => state.auth);
   const { t } = useTranslation();
   const [isMapOpen, setIsMapOpen] = useState(false);
   const navigate = useNavigate();
 
+  const userCoords = user?.location.coordinates || guestLocation;
 
-  const distance = user?.location.coordinates
-    ? calculateDistance(user.location.coordinates, product.location.coordinates)
+  const distance = userCoords
+    ? calculateDistance(userCoords, product.location.coordinates)
     : null;
 
   const getBadgeStyles = (type: string) => {
@@ -159,6 +160,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         lng={product.location.coordinates.lng}
         title={product.name}
         locationName={product.location.city}
+        buyerLat={userCoords?.lat}
+        buyerLng={userCoords?.lng}
       />
     </div>
 

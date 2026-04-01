@@ -1,6 +1,8 @@
-import React from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import React, { useEffect } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
+import 'leaflet-routing-machine';
+import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
 import { X, MapPin } from 'lucide-react';
 
 // Fix for default Leaflet icon issue
@@ -23,9 +25,53 @@ interface MapModalProps {
   lng: number;
   title: string;
   locationName?: string;
+  buyerLat?: number;
+  buyerLng?: number;
 }
 
-const MapModal: React.FC<MapModalProps> = ({ isOpen, onClose, lat, lng, title, locationName }) => {
+const RoutingMachine = ({ buyerLat, buyerLng, sellerLat, sellerLng }: { buyerLat: number, buyerLng: number, sellerLat: number, sellerLng: number }) => {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!map) return;
+    
+    // @ts-ignore - leaflet-routing-machine adds routing to L
+    const plan = (L.Routing as any).plan([
+      L.latLng(buyerLat, buyerLng),
+      L.latLng(sellerLat, sellerLng)
+    ], {
+      createMarker: () => null
+    });
+
+    // @ts-ignore
+    const routingControl = L.Routing.control({
+      plan,
+      routeWhileDragging: false,
+      addWaypoints: false,
+      fitSelectedRoutes: true,
+      show: false,
+      lineOptions: {
+        styles: [{ color: '#0ea5e9', weight: 5, opacity: 0.8 }],
+        extendToWaypoints: true,
+        missingRouteTolerance: 0
+      }
+    }).addTo(map);
+
+    return () => {
+      try {
+        if (map && routingControl) {
+          map.removeControl(routingControl);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+  }, [map, buyerLat, buyerLng, sellerLat, sellerLng]);
+
+  return null;
+};
+
+const MapModal: React.FC<MapModalProps> = ({ isOpen, onClose, lat, lng, title, locationName, buyerLat, buyerLng }) => {
   if (!isOpen) return null;
 
   return (
@@ -53,8 +99,8 @@ const MapModal: React.FC<MapModalProps> = ({ isOpen, onClose, lat, lng, title, l
 
         <div className="h-[400px] w-full">
           <MapContainer
-            center={[lat, lng]}
-            zoom={15}
+            center={buyerLat && buyerLng ? [(lat + buyerLat) / 2, (lng + buyerLng) / 2] : [lat, lng]}
+            zoom={buyerLat && buyerLng ? 12 : 15}
             scrollWheelZoom={true}
             className="h-full w-full"
           >
@@ -64,16 +110,46 @@ const MapModal: React.FC<MapModalProps> = ({ isOpen, onClose, lat, lng, title, l
             />
             <Marker position={[lat, lng]}>
               <Popup className="font-bold font-sans">
-                {title}
+                {title} (Seller)
               </Popup>
             </Marker>
+            
+            {buyerLat && buyerLng && (
+              <Marker position={[buyerLat, buyerLng]}>
+                <Popup className="font-bold font-sans">
+                  Your Location
+                </Popup>
+              </Marker>
+            )}
+
+            {buyerLat && buyerLng && (
+              <RoutingMachine 
+                buyerLat={buyerLat} 
+                buyerLng={buyerLng} 
+                sellerLat={lat} 
+                sellerLng={lng} 
+              />
+            )}
           </MapContainer>
         </div>
         
-        <div className="p-4 bg-gray-50 text-center">
+        <div className="p-4 bg-gray-50 flex items-center justify-between gap-4">
+          <a
+            href={
+              buyerLat && buyerLng
+                ? `https://www.google.com/maps/dir/?api=1&origin=${buyerLat},${buyerLng}&destination=${lat},${lng}`
+                : `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`
+            }
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center space-x-2 bg-white border-2 border-primary-200 text-primary-700 font-bold px-6 py-2.5 rounded-xl shadow-sm hover:bg-primary-50 transition-all active:scale-95 flex-1"
+          >
+            <MapPin size={18} />
+            <span>Open in Google Maps</span>
+          </a>
           <button 
             onClick={onClose}
-            className="bg-primary-600 text-white font-bold px-8 py-2.5 rounded-xl shadow-lg hover:bg-primary-700 transition-all active:scale-95"
+            className="bg-gray-200 text-gray-700 font-bold px-8 py-2.5 rounded-xl hover:bg-gray-300 transition-all active:scale-95"
           >
             Close
           </button>

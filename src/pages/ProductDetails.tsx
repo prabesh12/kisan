@@ -26,7 +26,9 @@ const ProductDetails: React.FC = () => {
   const { t, i18n } = useTranslation();
   
   const { items } = useAppSelector((state) => state.products);
-  const { user: currentUser } = useAppSelector((state) => state.auth);
+  const { user: currentUser, guestLocation } = useAppSelector((state) => state.auth);
+  
+  const userCoords = currentUser?.location.coordinates || guestLocation;
   
   const product = items.find((p) => p.id === id);
   const seller = product ? findUserById(product.sellerId) : null;
@@ -42,19 +44,19 @@ const ProductDetails: React.FC = () => {
   }, [id, dispatch]);
 
   const distance = useMemo(() => {
-    if (!product || !currentUser) return null;
+    if (!product || !userCoords) return null;
     
     // Haversine formula
     const R = 6371; // km
-    const dLat = (product.location.coordinates.lat - currentUser.location.coordinates.lat) * Math.PI / 180;
-    const dLon = (product.location.coordinates.lng - currentUser.location.coordinates.lng) * Math.PI / 180;
+    const dLat = (product.location.coordinates.lat - userCoords.lat) * Math.PI / 180;
+    const dLon = (product.location.coordinates.lng - userCoords.lng) * Math.PI / 180;
     const a = 
       Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(currentUser.location.coordinates.lat * Math.PI / 180) * Math.cos(product.location.coordinates.lat * Math.PI / 180) * 
+      Math.cos(userCoords.lat * Math.PI / 180) * Math.cos(product.location.coordinates.lat * Math.PI / 180) * 
       Math.sin(dLon/2) * Math.sin(dLon/2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     return (R * c).toFixed(1);
-  }, [product, currentUser]);
+  }, [product, userCoords]);
 
   if (!product) {
     return (
@@ -290,6 +292,8 @@ const ProductDetails: React.FC = () => {
         lng={product.location.coordinates.lng}
         title={product.name}
         locationName={product.location.city}
+        buyerLat={userCoords?.lat}
+        buyerLng={userCoords?.lng}
       />
     </div>
   );
