@@ -80,9 +80,9 @@ const HomeFeed: React.FC = () => {
   const { t } = useTranslation();
 
   const [searchParams] = useSearchParams();
-  
+
   const { data, loading, error } = useQuery<GetProductsData>(GET_PRODUCTS);
-  
+
   const products = data?.getProducts || [];
 
   useEffect(() => {
@@ -108,11 +108,13 @@ const HomeFeed: React.FC = () => {
     if (user?.location?.coordinates && sortBy === 'newest') {
       dispatch(setSortBy('closest'));
     }
-  }, [user?.location?.coordinates, dispatch, sortBy]); 
+  }, [user?.location?.coordinates, dispatch, sortBy]);
 
+
+  const { items: reduxProducts } = useAppSelector((state) => state.products);
 
   const filteredProducts = useMemo(() => {
-    let result = products.filter((product: any) => {
+    let result = reduxProducts.filter((product: any) => {
       if (product.status === 'sold') return false;
       if (categories && categories.length > 0 && !categories.includes(product.category)) return false;
       if (listingTypes && listingTypes.length > 0 && !listingTypes.includes(product.listingType)) return false;
@@ -157,8 +159,8 @@ const HomeFeed: React.FC = () => {
 
   return (
     <PageTransition>
-      <div className="space-y-8">
-        <div className="sticky top-[64px] md:top-[74px] z-30 -mx-4 px-4 py-4 sm:mx-0 sm:px-0 bg-gray-50/80 backdrop-blur-md border-b border-gray-100 sm:border-none">
+      <div className="flex flex-col w-full">
+        <div className="sticky top-[60px] md:top-[60px] z-30 -mt-6 -mx-4 px-4 py-6 bg-gray-50/80 backdrop-blur-xl border-b border-gray-100 sm:border-none">
           <div className="space-y-6 text-left">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <h2 className="text-2xl font-black text-primary-900 tracking-tight font-heading">
@@ -192,13 +194,13 @@ const HomeFeed: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-8 items-start w-full">
+        <div className="flex flex-col lg:flex-row gap-8 items-start w-full mt-8">
           <aside className="hidden lg:block w-[280px] shrink-0 sticky top-[165px] z-10 bg-white p-6 rounded-2xl border border-gray-100 shadow-xl shadow-gray-200/50 max-h-[calc(100vh-185px)] overflow-y-auto no-scrollbar">
             <FilterSidebar />
           </aside>
 
           <main className="flex-1 w-full min-w-0">
-            <motion.div 
+            <motion.div
               variants={containerVariants}
               initial="hidden"
               animate="visible"

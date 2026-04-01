@@ -10,6 +10,7 @@ import { z } from 'zod';
 import { useMutation } from '@apollo/client/react';
 import { gql } from '@apollo/client';
 import PageTransition from '../components/PageTransition';
+import { toast } from 'react-hot-toast';
 
 const SIGNUP_MUTATION = gql`
   mutation Signup($name: String!, $email: String!, $password: String!, $phoneNumber: String!, $location: LocationInput!) {
@@ -102,6 +103,7 @@ const LoginSignup: React.FC = () => {
         });
         if (response?.login) {
           dispatch(loginAction(response.login));
+          toast.success(`${t('auth.welcome') || 'Welcome back'}, ${response.login.user.name}!`);
           navigate('/home');
         }
       } else {
@@ -122,6 +124,7 @@ const LoginSignup: React.FC = () => {
         });
         if (response?.signup) {
           dispatch(loginAction(response.signup));
+          toast.success("Welcome to Kisan Marketplace!");
           navigate('/home');
         }
       }
@@ -132,7 +135,7 @@ const LoginSignup: React.FC = () => {
         err?.networkError?.message ||
         err?.message ||
         "Authentication failed.";
-      alert(message);
+      toast.error(message);
     }
   };
 

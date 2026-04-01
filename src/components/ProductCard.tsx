@@ -1,275 +1,190 @@
-import { MapPin, Calendar, ShoppingCart, Repeat, Gift, Phone, MoreVertical, Edit2, Trash2, CheckCircle2 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-
-import type { Product } from '../features/products/productSlice';
-import { calculateDistance, formatDistance } from '../utils/location';
-import { useAppSelector, useAppDispatch } from '../hooks/redux';
+import React from 'react';
+import { MapPin, Phone, Gift, Repeat, ShoppingCart } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import MapModal from './MapModal';
-import { useState, useRef, useEffect } from 'react';
-import { setSoldStatus, deleteProduct } from '../features/products/productSlice';
-import { savePersistentProduct, deletePersistentProduct } from '../utils/storage';
-
+import type { Product } from '../features/products/productSlice';
+import { useAppSelector } from '../hooks/redux';
 
 interface ProductCardProps {
   product: Product;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-  const { user, guestLocation } = useAppSelector((state) => state.auth);
-  const { t } = useTranslation();
-  const dispatch = useAppDispatch();
-  const [isMapOpen, setIsMapOpen] = useState(false);
-  const [showManageMenu, setShowManageMenu] = useState(false);
   const navigate = useNavigate();
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  const isOwner = user?.id === product.sellerId;
+  const { t } = useTranslation();
+  const { user, guestLocation } = useAppSelector((state) => state.auth);
+  
   const userCoords = user?.location.coordinates || guestLocation;
 
-  const distance = userCoords
-    ? calculateDistance(userCoords, product.location.coordinates)
-    : null;
-
-  // Handle clicking outside to close menu
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setShowManageMenu(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const handleToggleSold = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const newStatus = product.status === 'active' ? 'sold' : 'active';
-    dispatch(setSoldStatus({ id: product.id, status: newStatus }));
-    savePersistentProduct({ ...product, status: newStatus });
-    setShowManageMenu(false);
-  };
-
-  const handleDelete = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (window.confirm(t('common.confirmDelete') || 'Are you sure you want to delete this listing?')) {
-      dispatch(deleteProduct(product.id));
-      deletePersistentProduct(product.id);
-    }
-    setShowManageMenu(false);
-  };
-
-  const getBadgeStyles = (type: string) => {
+  // Configuration for listing types - matching user snippet exact config
+  const getListingConfig = (type: string) => {
     switch (type) {
       case 'free':
-        return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+        return {
+          label: t('filters.types.free'),
+          icon: Gift,
+          bgColor: 'bg-purple-100',
+          textColor: 'text-purple-700',
+        };
       case 'exchange':
-        return 'bg-indigo-100 text-indigo-700 border-indigo-200';
+        return {
+          label: t('filters.types.exchange'),
+          icon: Repeat,
+          bgColor: 'bg-indigo-100',
+          textColor: 'text-indigo-700',
+        };
       case 'sell':
-        return 'bg-amber-100 text-amber-700 border-amber-200';
       default:
-        return 'bg-gray-100 text-gray-700 border-gray-200';
+        return {
+          label: t('filters.types.sell') === 'Sell' ? 'For Sale' : t('filters.types.sell'),
+          icon: ShoppingCart,
+          bgColor: 'bg-emerald-100',
+          textColor: 'text-emerald-700',
+        };
     }
   };
 
-  const getBadgeIcon = (type: string) => {
-    switch (type) {
-      case 'free':
-        return <Gift size={14} />;
-      case 'exchange':
-        return <Repeat size={14} />;
-      case 'sell':
-        return <ShoppingCart size={14} />;
-      default:
-        return null;
-    }
+  const config = getListingConfig(product.listingType);
+  const Icon = config.icon;
+
+  // Calculate distance for badge (matching snippet 'distance' var)
+  const calculateDistanceKm = () => {
+    if (!userCoords) return null;
+    const R = 6371;
+    const dLat = (product.location.coordinates.lat - userCoords.lat) * Math.PI / 180;
+    const dLon = (product.location.coordinates.lng - userCoords.lng) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(userCoords.lat * Math.PI / 180) * Math.cos(product.location.coordinates.lat * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const dist = (R * c).toFixed(1);
+    return `${dist} km away`;
   };
+
+  const distance = calculateDistanceKm();
+  const dateAdded = (() => {
+    try {
+      const dateObj = new Date(Number(product.createdAt) || product.createdAt);
+      return isNaN(dateObj.getTime()) ? t('common.recently') || 'Recently' : dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    } catch {
+      return t('common.recently') || 'Recently';
+    }
+  })();
 
   return (
     <motion.div 
-      layout
-      whileHover={{ y: -8, scale: 1.01 }}
-      className="group bg-white rounded-2xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgba(34,197,94,0.12)] transition-all duration-500 border border-gray-100 flex flex-col h-full relative"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -4 }}
+      transition={{ duration: 0.3 }}
+      className="group relative w-full overflow-hidden rounded-xl bg-white shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 cursor-pointer"
+      onClick={() => navigate(`/product/${product.id}`)}
     >
-      {/* Manage Button (Owner Only) */}
-      {isOwner && (
-        <div className="absolute top-4 right-4 z-20" ref={menuRef}>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowManageMenu(!showManageMenu);
-            }}
-            className="p-2.5 bg-white rounded-2xl shadow-xl border border-gray-100 text-gray-600 hover:text-primary-600 transition-all active:scale-90 flex items-center justify-center"
-          >
-            <MoreVertical size={20} />
-          </button>
+      {/* Image Container */}
+      <div className="relative overflow-hidden aspect-square bg-gray-100">
+        <img
+          src={product.photos[0] || 'https://via.placeholder.com/400'}
+          alt={product.name}
+          className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 ${product.status === 'sold' ? 'grayscale opacity-80' : ''}`}
+        />
 
-          <AnimatePresence>
-            {showManageMenu && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-2xl border border-gray-100 p-2 overflow-hidden z-30"
-              >
-                <button
-                  onClick={handleToggleSold}
-                  className="w-full flex items-center space-x-3 px-4 py-3 text-left rounded-xl hover:bg-primary-50 transition-colors"
-                >
-                  <CheckCircle2 size={18} className={product.status === 'sold' ? 'text-green-500' : 'text-gray-400'} />
-                  <span className="text-sm font-bold text-gray-700">
-                    {product.status === 'sold' ? t('listings.markActive') : t('listings.markAsSold')}
-                  </span>
-                </button>
-                <button
-                  onClick={(e) => { e.stopPropagation(); navigate(`/edit-product/${product.id}`); }}
-                  className="w-full flex items-center space-x-3 px-4 py-3 text-left rounded-xl hover:bg-blue-50 transition-colors"
-                >
-                  <Edit2 size={18} className="text-blue-500" />
-                  <span className="text-sm font-bold text-gray-700">{t('listings.editProduct')}</span>
-                </button>
-                <div className="h-px bg-gray-50 my-1 mx-2" />
-                <button
-                  onClick={handleDelete}
-                  className="w-full flex items-center space-x-3 px-4 py-3 text-left rounded-xl hover:bg-red-50 transition-colors"
-                >
-                  <Trash2 size={18} className="text-red-500" />
-                  <span className="text-sm font-bold text-red-600">{t('listings.deleteListing')}</span>
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      )}
-
-      <div 
-        onClick={() => navigate(`/product/${product.id}`)} 
-        className="flex flex-col h-full cursor-pointer"
-      >
-        {/* Top Image Section */}
-        <div className="relative aspect-[4/3] sm:aspect-square overflow-hidden bg-gray-100">
-          <img
-            src={product.photos[0] || 'https://via.placeholder.com/400'}
-            alt={product.name}
-            className={`w-full h-full object-cover transition-all duration-700 group-hover:scale-110 ${product.status === 'sold' ? 'grayscale opacity-80' : ''}`}
-          />
-          
-          {/* Sold Overlay */}
-          {product.status === 'sold' && (
-             <div className="absolute inset-0 bg-black/40 flex items-center justify-center p-6 z-10">
-                <div className="bg-white px-5 py-2 rounded-full shadow-[0_10px_40px_rgba(0,0,0,0.2)] border-2 border-emerald-500 text-emerald-700 font-extrabold text-xs uppercase tracking-[0.25em] rotate-[-8deg] flex items-center space-x-2 animate-in zoom-in-50 duration-300">
-                   <CheckCircle2 size={14} className="animate-pulse" />
-                   <span>{t('product.sold')}</span>
-                </div>
-             </div>
-          )}
-
-          {/* distance badge */}
-          {distance !== null && product.status !== 'sold' && (
-            <button 
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setIsMapOpen(true);
-              }}
-              className="absolute top-3 left-3 bg-white px-3 py-2 rounded-full text-[10px] sm:text-xs font-bold text-gray-800 shadow-xl flex items-center space-x-1.5 hover:bg-gray-50 hover:scale-105 transition-all active:scale-95 group/pin z-10 border border-gray-100"
-            >
-              <MapPin size={12} className="text-emerald-600" />
-              <span>{formatDistance(distance)} {t('product.away')}</span>
-            </button>
-          )}
-
-          {/* listing type badge */}
-          <div 
-            className={`absolute bottom-3 right-3 px-3 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center space-x-2 border shadow-lg ${getBadgeStyles(product.listingType)}`}
-          >
-            {getBadgeIcon(product.listingType)}
-            <span>{t(`filters.types.${product.listingType}`)}</span>
+        {/* Location Badge - Top Left */}
+        {distance && (
+          <div className="absolute top-3 left-3 inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-white/95 backdrop-blur-sm rounded-lg shadow-sm z-10">
+            <MapPin className="w-3.5 h-3.5 text-gray-600" />
+            <span className="text-xs font-medium text-gray-700">{distance}</span>
           </div>
+        )}
+
+        {/* Listing Type Badge - Top Right */}
+        <div
+          className={`absolute top-3 right-3 inline-flex items-center gap-1 px-2.5 py-1.5 ${config.bgColor} rounded-lg shadow-sm z-10`}
+        >
+          <Icon className={`w-3.5 h-3.5 ${config.textColor}`} />
+          <span className={`text-xs font-semibold ${config.textColor}`}>
+            {config.label}
+          </span>
         </div>
 
-        {/* Content Section */}
-        <div className="p-5 flex flex-col flex-1 space-y-4">
-          <div className="flex justify-between items-start gap-2">
-            <h3 className="text-lg font-black text-gray-900 group-hover:text-emerald-600 transition-colors line-clamp-1 leading-tight tracking-tight">
-              {product.name}
-            </h3>
-            <span className="text-[10px] bg-emerald-50 text-emerald-700 font-extrabold px-2 py-1 rounded-lg uppercase tracking-widest border border-emerald-100 flex-shrink-0">
-              {product.category}
-            </span>
-          </div>
-
-          <p className="text-gray-500 text-xs sm:text-sm line-clamp-2 leading-relaxed font-medium">
-            {product.description}
-          </p>
-
-          {/* Seller & Date Info */}
-          <div className="flex items-center justify-between text-xs text-gray-500 font-bold">
-            <Link 
-              to={`/seller/${product.sellerId}`}
-              onClick={(e) => e.stopPropagation()}
-              className="flex items-center space-x-2 hover:text-emerald-600 transition-colors bg-gray-50 px-2 py-1 rounded-lg"
-            >
-              <div className="w-5 h-5 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-700">
-                <span className="text-[10px]">{product.sellerName?.charAt(0).toUpperCase()}</span>
-              </div>
-              <span>{product.sellerName}</span>
-            </Link>
-            <div className="flex items-center space-x-1.5 text-gray-400">
-              <Calendar size={14} />
-              <span>{new Date(product.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+        {/* Sold Overlay */}
+        {product.status === 'sold' && (
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-20">
+            <div className="bg-white px-4 py-1.5 rounded-full shadow-lg border border-emerald-500 text-emerald-700 font-bold text-xs uppercase tracking-widest rotate-[-8deg]">
+              {t('product.sold')}
             </div>
           </div>
-
-          <div className="pt-2 flex items-center justify-between gap-4">
-            {product.listingType === 'sell' ? (
-              <div className="flex flex-col">
-                <div className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-0.5 ml-0.5">
-                   {t('product.quantity')}: <span className="text-gray-600">{product.quantity} {product.unit}</span>
-                </div>
-                <div className="text-2xl font-black text-gray-900 flex items-baseline">
-                  <span className="text-sm font-bold text-emerald-600 mr-1">Rs.</span>
-                  {product.price}
-                  <span className="text-xs text-gray-400 font-bold ml-1 uppercase tracking-tighter">
-                     / {product.unit}
-                  </span>
-                </div>
-              </div>
-            ) : product.listingType === 'exchange' ? (
-              <div className="flex items-center space-x-2 text-xs font-black text-indigo-600 uppercase tracking-tight bg-indigo-50 px-3 py-2 rounded-xl border border-indigo-100">
-                 <Repeat size={14} />
-                 <span>{product.exchangePreference}</span>
-              </div>
-            ) : (
-              <div className="text-lg font-black text-emerald-600 uppercase tracking-widest flex items-center space-x-2">
-                 <Gift size={20} />
-                 <span>{t('product.free')}</span>
-              </div>
-            )}
-
-            <a 
-              href={`tel:${product.contactNumbers?.[0] || (product as any).contactNumber || ''}`}
-              onClick={(e) => e.stopPropagation()}
-              className="p-3.5 bg-emerald-600 text-white rounded-2xl shadow-lg shadow-emerald-200 hover:bg-emerald-700 hover:scale-110 active:scale-95 transition-all duration-300"
-              title={t('product.callSeller')}
-            >
-              <Phone size={20} />
-            </a>
-          </div>
-        </div>
+        )}
       </div>
 
-      <MapModal
-        isOpen={isMapOpen}
-        onClose={() => setIsMapOpen(false)}
-        lat={product.location.coordinates.lat}
-        lng={product.location.coordinates.lng}
-        title={product.name}
-        locationName={product.location.city}
-        buyerLat={userCoords?.lat}
-        buyerLng={userCoords?.lng}
-      />
+      {/* Content Section */}
+      <div className="p-4 space-y-3">
+        {/* Product Name */}
+        <h3 className="text-lg font-bold text-gray-900 line-clamp-2">
+          {product.name}
+        </h3>
+
+        {/* Seller & Location Info */}
+        <div className="flex items-start gap-2.5">
+          <div className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white font-semibold text-sm shadow-sm">
+            {product.sellerName?.charAt(0).toUpperCase() || 'K'}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-gray-900 truncate">{product.sellerName}</p>
+            <p className="text-xs text-gray-500 line-clamp-1">{product.location.city}</p>
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div className="h-px bg-gray-100" />
+
+        {/* Quantity & Date Added */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+              {t('product.quantity')}
+            </span>
+            <span className="text-sm font-bold text-gray-900">{product.quantity} {product.unit}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+              {t('product.posted')}
+            </span>
+            <span className="text-xs text-gray-600">{dateAdded}</span>
+          </div>
+        </div>
+
+        {/* Price or Status */}
+        <div className="pt-1 h-10 flex items-center">
+          {product.listingType === 'sell' && product.price !== undefined ? (
+            <div className="flex items-baseline gap-1">
+              <span className="text-sm font-semibold text-gray-600">₹</span>
+              <span className="text-2xl font-bold text-emerald-600">{product.price}</span>
+              <span className="text-xs text-gray-500">/{product.unit}</span>
+            </div>
+          ) : product.listingType === 'free' ? (
+            <span className="text-lg font-bold text-purple-600">{t('product.free')}</span>
+          ) : (
+            <div className="flex flex-col">
+              <span className="text-[10px] font-semibold text-indigo-500 uppercase tracking-tight">{t('product.exchangeFor')}</span>
+              <span className="text-sm font-bold text-indigo-600 line-clamp-1 truncate max-w-[200px]">{product.exchangePreference || t('filters.types.exchange')}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Contact Button */}
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            window.location.href = `tel:${product.contactNumbers?.[0] || (product as any).contactNumber || ''}`;
+          }}
+          className="w-full h-10 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-center gap-2 active:scale-95"
+        >
+          <Phone className="w-4 h-4" />
+          {t('product.callSeller')}
+        </button>
+      </div>
     </motion.div>
   );
 };

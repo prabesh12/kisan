@@ -16,6 +16,9 @@ import { z } from 'zod';
 import PageTransition from '../components/PageTransition';
 import { gql } from '@apollo/client/core/index.js';
 import { useMutation } from '@apollo/client/react/index.js';
+import { toast } from 'react-hot-toast';
+
+const MAX_FILE_SIZE = 4 * 1024 * 1024; // 4MB safe limit for Vercel
 
 const CREATE_PRODUCT_MUTATION = gql`
   mutation CreateProduct(
@@ -243,9 +246,15 @@ const AddEditProduct: React.FC = () => {
       }
 
       // 4. Redirect
+      toast.success(isEditMode ? t('product.updateSuccess') || 'Product updated!' : t('product.publishSuccess') || 'Product published successfully!');
       navigate('/home');
     } catch (err: any) {
-      setServerError(err.graphQLErrors?.[0]?.message || err.message);
+      const errorMessage = err.message.includes('413') 
+        ? "This photo is too large for the internet! Please try a smaller file or a screenshot (under 4MB)."
+        : err.graphQLErrors?.[0]?.message || err.message;
+      
+      setServerError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -262,6 +271,11 @@ const AddEditProduct: React.FC = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error("This photo is too heavy! Please pick a smaller image (less than 4MB).");
+        e.target.value = ''; // Reset input
+        return;
+      }
       const reader = new FileReader();
       reader.onloadend = () => {
         setPhotos([reader.result as string]);

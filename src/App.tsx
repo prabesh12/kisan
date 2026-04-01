@@ -17,6 +17,7 @@ import AddEditProduct from './pages/AddEditProduct';
 import ProductDetails from './pages/ProductDetails';
 import PublicProfile from './pages/PublicProfile';
 
+import { Toaster } from 'react-hot-toast';
 import LocationProvider from './components/LocationProvider';
 
 const AppContent: React.FC = () => {
@@ -63,6 +64,7 @@ const App: React.FC = () => {
             <Router>
               <AppContent />
             </Router>
+            <Toaster position="top-right" />
           </LocationProvider>
         </ApolloProvider>
       </PersistGate>
