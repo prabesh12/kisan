@@ -4,7 +4,7 @@ import { store } from './app/store';
 
 // Replace with your backend URL if it changes
 const httpLink = createHttpLink({
-  uri: 'https://kisan-backend-45lp11ilg-prabesholi8848-7604s-projects.vercel.app/graphql',
+  uri: 'https://kisan-backend-teal.vercel.app/graphql',
 });
 
 const authLink = setContext((_, { headers }) => {
