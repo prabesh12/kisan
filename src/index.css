@@ -83,13 +83,14 @@
   --color-foreground: var(--foreground);
   --color-border: var(--border);
   --color-accent: var(--accent);
+  --color-ring: var(--ring);
   
   --radius-lg: var(--radius);
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border outline-ring;
   }
   body {
     @apply bg-background text-foreground;
