@@ -38,7 +38,27 @@
     "save": "Save Changes",
     "signOut": "Sign Out",
     "success": "Profile updated successfully!",
-    "joined": "Joined"
+    "joined": "Joined",
+    "farmName": "Farm Name",
+    "specialty": "Primary Specialty",
+    "noFarmName": "No farm name set",
+    "digitalStorefront": "Digital Storefront",
+    "farmerSince": "Farmer since",
+    "activeListings": "Active Listings",
+    "productViews": "Product Views",
+    "contactFarmer": "Contact Farmer",
+    "noListings": "No active listings",
+    "noListingsDesc": "This farmer has no items available right now.",
+    "specialties": {
+      "general": "General Farming",
+      "veg": "Vegetables Expert",
+      "fruit": "Fruits Specialist",
+      "dairy": "Dairy Farmer",
+      "meat": "Livestock & Meat",
+      "grain": "Grain Production",
+      "organic": "Organic Expert"
+    },
+    "defaultBio": "Experienced farmer dedicated to providing high-quality agricultural products to the community."
   },
   "listings": {
     "title": "Seller Hub",
@@ -72,7 +92,12 @@
     "exchangeFor": "Exchange for:",
     "uploadPhoto": "Upload Product Photo",
     "tapToUpload": "Tap to upload photo",
-    "remove": "Remove"
+    "remove": "Remove",
+    "callSeller": "Call Seller",
+    "viewMap": "View Map",
+    "verifiedListing": "Verified Listing",
+    "contactHelp": "Buyers will use this number to contact you directly.",
+    "notFound": "Product not found"
   },
   "filters": {
     "freshIn": "Fresh in",

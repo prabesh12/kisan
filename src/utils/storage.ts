@@ -1,4 +1,4 @@
-import { MOCK_USER, MOCK_PRODUCTS } from './seedData';
+import { MOCK_USER, MOCK_PRODUCTS, MOCK_SELLERS } from './seedData';
 import type { Product } from '../features/products/productSlice';
 
 const USERS_KEY = 'kisan_users';
@@ -17,6 +17,8 @@ export interface UserProfile {
   };
   bio: string;
   profilePhoto?: string;
+  farmName?: string;
+  specialty?: string;
 }
 
 /**
@@ -24,7 +26,7 @@ export interface UserProfile {
  */
 export const initStorage = () => {
   if (!localStorage.getItem(USERS_KEY)) {
-    localStorage.setItem(USERS_KEY, JSON.stringify([MOCK_USER]));
+    localStorage.setItem(USERS_KEY, JSON.stringify([MOCK_USER, ...MOCK_SELLERS]));
   }
   if (!localStorage.getItem(PRODUCTS_KEY)) {
     localStorage.setItem(PRODUCTS_KEY, JSON.stringify(MOCK_PRODUCTS));
@@ -36,7 +38,7 @@ export const initStorage = () => {
  */
 export const getUsers = (): UserProfile[] => {
   const users = localStorage.getItem(USERS_KEY);
-  return users ? JSON.parse(users) : [MOCK_USER];
+  return users ? JSON.parse(users) : [MOCK_USER, ...MOCK_SELLERS];
 };
 
 /**

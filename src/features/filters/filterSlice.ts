@@ -3,16 +3,16 @@ import type { PayloadAction } from '@reduxjs/toolkit';
 import type { Category, ListingType } from '../products/productSlice';
 
 interface FilterState {
-  category: Category | 'all';
-  listingType: ListingType | 'all';
+  categories: Category[];
+  listingTypes: ListingType[];
   radius: number | 'all'; // in km
   searchQuery: string;
   sortBy: 'newest' | 'price-low' | 'closest';
 }
 
 const initialState: FilterState = {
-  category: 'all',
-  listingType: 'all',
+  categories: [],
+  listingTypes: [],
   radius: 'all',
   searchQuery: '',
   sortBy: 'newest',
@@ -22,11 +22,19 @@ const filterSlice = createSlice({
   name: 'filters',
   initialState,
   reducers: {
-    setCategory: (state, action: PayloadAction<Category | 'all'>) => {
-      state.category = action.payload;
+    toggleCategory: (state, action: PayloadAction<Category>) => {
+      if (state.categories.includes(action.payload)) {
+        state.categories = state.categories.filter((c) => c !== action.payload);
+      } else {
+        state.categories.push(action.payload);
+      }
     },
-    setListingType: (state, action: PayloadAction<ListingType | 'all'>) => {
-      state.listingType = action.payload;
+    toggleListingType: (state, action: PayloadAction<ListingType>) => {
+      if (state.listingTypes.includes(action.payload)) {
+        state.listingTypes = state.listingTypes.filter((t) => t !== action.payload);
+      } else {
+        state.listingTypes.push(action.payload);
+      }
     },
     setRadius: (state, action: PayloadAction<number | 'all'>) => {
       state.radius = action.payload;
@@ -41,6 +49,6 @@ const filterSlice = createSlice({
   },
 });
 
-export const { setCategory, setListingType, setRadius, setSearchQuery, setSortBy, resetFilters } = filterSlice.actions;
+export const { toggleCategory, toggleListingType, setRadius, setSearchQuery, setSortBy, resetFilters } = filterSlice.actions;
 
 export default filterSlice.reducer;

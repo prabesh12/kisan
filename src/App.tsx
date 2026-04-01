@@ -11,6 +11,7 @@ import UserProfile from './pages/UserProfile';
 import MyListings from './pages/MyListings';
 import AddEditProduct from './pages/AddEditProduct';
 import ProductDetails from './pages/ProductDetails';
+import PublicProfile from './pages/PublicProfile';
 
 const App: React.FC = () => {
   return (
@@ -27,6 +28,7 @@ const App: React.FC = () => {
               <Route path="/add-product" element={<AddEditProduct />} />
               <Route path="/edit-product/:id" element={<AddEditProduct />} />
               <Route path="/product/:id" element={<ProductDetails />} />
+              <Route path="/seller/:id" element={<PublicProfile />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Layout>

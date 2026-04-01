@@ -1,16 +1,19 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useAppSelector, useAppDispatch } from '../hooks/redux';
 import { useSearchParams } from 'react-router-dom';
-
+import { Drawer } from 'vaul';
 import { setProducts } from '../features/products/productSlice';
 import { getPersistentProducts } from '../utils/storage';
 import ProductCard from '../components/ProductCard';
+import FilterSidebar from '../components/FilterSidebar';
 
-import { Filter, Search, Map as MapIcon, SlidersHorizontal } from 'lucide-react';
-import { setCategory, setListingType, setRadius, setSearchQuery, setSortBy, resetFilters } from '../features/filters/filterSlice';
+import {
+  Filter,
+  Search, X
+} from 'lucide-react';
+import { setSearchQuery, resetFilters } from '../features/filters/filterSlice';
 
 import { calculateDistance } from '../utils/location';
-import type { Category, ListingType } from '../features/products/productSlice';
 import { useTranslation } from 'react-i18next';
 
 
@@ -18,7 +21,8 @@ const HomeFeed: React.FC = () => {
   const dispatch = useAppDispatch();
   const { items } = useAppSelector((state) => state.products);
   const { user } = useAppSelector((state) => state.auth);
-  const { category, listingType, radius, searchQuery, sortBy } = useAppSelector((state) => state.filters);
+  const { categories, listingTypes, radius, searchQuery, sortBy } = useAppSelector((state) => state.filters);
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   const { t } = useTranslation();
 
 
@@ -46,11 +50,11 @@ const HomeFeed: React.FC = () => {
       // Phase 2: Filter out SOLD items completely
       if (product.status === 'sold') return false;
 
-      // Category filter
-      if (category !== 'all' && product.category !== category) return false;
+      // Category filter (Multi-Select)
+      if (categories && categories.length > 0 && !categories.includes(product.category)) return false;
 
-      // Listing type filter
-      if (listingType !== 'all' && product.listingType !== listingType) return false;
+      // Listing type filter (Multi-Select)
+      if (listingTypes && listingTypes.length > 0 && !listingTypes.includes(product.listingType)) return false;
 
       // Search query filter
       if (searchQuery) {
@@ -59,8 +63,8 @@ const HomeFeed: React.FC = () => {
           const tagTrigger = query.slice(1);
           if (!product.tags?.some(tag => tag.toLowerCase().includes(tagTrigger))) return false;
         } else {
-          if (!product.name.toLowerCase().includes(query) && 
-              !product.description.toLowerCase().includes(query)) return false;
+          if (!product.name.toLowerCase().includes(query) &&
+            !product.description.toLowerCase().includes(query)) return false;
         }
       }
 
@@ -79,7 +83,7 @@ const HomeFeed: React.FC = () => {
       if (sortBy === 'newest') {
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       }
-      
+
       if (sortBy === 'price-low') {
         const priceA = a.listingType === 'sell' ? (a.price || 0) : 0;
         const priceB = b.listingType === 'sell' ? (b.price || 0) : 0;
@@ -94,131 +98,116 @@ const HomeFeed: React.FC = () => {
 
       return 0;
     });
-  }, [items, category, listingType, radius, searchQuery, sortBy, user]);
+  }, [items, categories, listingTypes, radius, searchQuery, sortBy, user]);
+
+  const activeFilterCount = (categories?.length || 0) + (listingTypes?.length || 0) + (radius !== 'all' ? 1 : 0);
 
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      {/* Header & Search */}
-      <div className="space-y-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <h2 className="text-2xl sm:text-3xl font-black font-heading text-primary-900 tracking-tight leading-tight">
-            {t('filters.freshIn')} <span className="text-primary-600">{t('filters.yourArea')}</span>
-          </h2>
+      {/* Sticky Header & Search */}
+      <div className="sticky top-0 z-30 -mx-4 px-4 py-4 sm:mx-0 sm:px-0 bg-white/80 backdrop-blur-xl border-b border-gray-100/50 sm:border-none sm:bg-transparent">
+        <div className="space-y-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
+              {t('filters.freshIn')} <span className="text-primary-600">{t('filters.yourArea')}</span>
+            </h2>
 
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <input
+                type="text"
+                placeholder={t('filters.searchPlaceholder')}
+                value={searchQuery}
+                onChange={(e) => dispatch(setSearchQuery(e.target.value))}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all placeholder:text-gray-400 text-sm bg-gray-50/50"
+              />
+            </div>
 
-          <div className="relative group flex-1 max-w-md">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-500 transition-colors" size={20} />
-            <input
-              type="text"
-              placeholder={t('filters.searchPlaceholder')}
-              value={searchQuery}
-
-              onChange={(e) => dispatch(setSearchQuery(e.target.value))}
-              className="w-full pl-12 pr-4 py-4 bg-white border-2 border-gray-100 rounded-2xl shadow-sm focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all placeholder:text-gray-400 font-medium"
-            />
+            <button
+              onClick={() => setIsFilterDrawerOpen(true)}
+              className="lg:hidden flex-shrink-0 flex items-center space-x-2 bg-white border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 transition-all text-sm font-medium text-gray-700 relative active:scale-95"
+            >
+              <Filter size={16} className={activeFilterCount > 0 ? 'text-primary-600' : 'text-gray-500'} />
+              <span>Filters</span>
+              {activeFilterCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-primary-600 text-white text-[10px] min-w-5 h-5 flex items-center justify-center rounded-full font-bold shadow-sm px-1">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
           </div>
         </div>
+      </div>
 
-        {/* Filters - Scrollable on mobile */}
-        <div className="flex items-center space-x-3 overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0 sm:pb-0 sm:flex-wrap sm:gap-3 sm:space-x-0 no-scrollbar select-none">
-          <div className="flex-shrink-0 bg-white p-2 rounded-xl border border-gray-100 flex items-center shadow-sm">
-            <SlidersHorizontal size={18} className="text-primary-600 mx-2" />
+      <div className="flex flex-col lg:flex-row gap-8 items-start w-full">
+        {/* Desktop Sidebar (Persistent) */}
+        <aside className="hidden lg:block w-[260px] shrink-0 sticky top-32 z-10 bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+          <FilterSidebar />
+        </aside>
+
+        {/* Main Grid Content */}
+        <main className="flex-1 w-full min-w-0">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+            {filteredProducts.length > 0 ? (
+              filteredProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))
+            ) : (
+              <div className="col-span-full py-24 text-center space-y-4 bg-white rounded-3xl border-2 border-dashed border-gray-200">
+                <div className="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto text-gray-300">
+                  <Filter size={40} />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-xl font-bold text-gray-900">{t('filters.noProducts')}</h3>
+                  <p className="text-gray-500 font-medium">{t('filters.noProductsDesc')}</p>
+                </div>
+              </div>
+            )}
           </div>
-          
-          {/* Category Dropdown */}
-          <div className="flex-shrink-0">
-            <select
-              value={category}
-              onChange={(e) => dispatch(setCategory(e.target.value as Category | 'all'))}
-              className="bg-white border-2 border-gray-100 rounded-xl px-4 py-2 font-bold text-gray-700 focus:border-primary-500 outline-none shadow-sm cursor-pointer hover:border-gray-300 transition-all text-sm appearance-none min-w-[140px]"
-            >
-              <option value="all">{t('filters.allCategories')}</option>
-              <option value="vegetables">{t('filters.categories.vegetables')}</option>
-              <option value="fruits">{t('filters.categories.fruits')}</option>
-              <option value="meat">{t('filters.categories.meat')}</option>
-              <option value="dairy">{t('filters.categories.dairy')}</option>
-              <option value="grains">{t('filters.categories.grains')}</option>
-              <option value="other">{t('filters.categories.other')}</option>
-            </select>
-          </div>
+        </main>
+      </div>
 
-          {/* Listing Type Dropdown */}
-          <div className="flex-shrink-0">
-            <select
-              value={listingType}
-              onChange={(e) => dispatch(setListingType(e.target.value as ListingType | 'all'))}
-              className="bg-white border-2 border-gray-100 rounded-xl px-4 py-2 font-bold text-gray-700 focus:border-primary-500 outline-none shadow-sm cursor-pointer hover:border-gray-300 transition-all text-sm appearance-none min-w-[110px]"
-            >
-              <option value="all">{t('filters.allTypes')}</option>
-              <option value="sell">{t('filters.types.sell')}</option>
-              <option value="exchange">{t('filters.types.exchange')}</option>
-              <option value="free">{t('filters.types.free')}</option>
-            </select>
-          </div>
+      {/* Vaul Native Mobile Drawer */}
+      <Drawer.Root open={isFilterDrawerOpen} onOpenChange={setIsFilterDrawerOpen}>
+        <Drawer.Portal>
+          <Drawer.Overlay className="fixed inset-0 bg-black/40 z-[100]" />
+          <Drawer.Content className="bg-white flex flex-col rounded-t-[20px] h-[92vh] fixed bottom-0 left-0 right-0 z-[101] outline-none">
+            <div className="p-4 bg-white rounded-t-[20px] flex-1 overflow-y-auto w-full max-w-md mx-auto relative no-scrollbar">
+              <div className="mx-auto w-12 h-1 flex-shrink-0 rounded-full bg-gray-300 mb-4" />
+              <div className="flex justify-between items-center mb-6">
+                <div className="flex items-center space-x-2">
+                  <h2 className="text-[17px] font-bold text-gray-900">Filters</h2>
+                </div>
+                <button
+                  onClick={() => setIsFilterDrawerOpen(false)}
+                  className="bg-gray-100/50 hover:bg-gray-100 p-2 rounded-full text-gray-400 transition-colors"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <FilterSidebar />
+            </div>
 
-          {/* Radius Dropdown */}
-          <div className="flex-shrink-0">
-            <select
-              value={radius}
-              onChange={(e) => dispatch(setRadius(e.target.value === 'all' ? 'all' : Number(e.target.value)))}
-              className="bg-white border-2 border-gray-100 rounded-xl px-4 py-2 font-bold text-gray-700 focus:border-primary-500 outline-none shadow-sm cursor-pointer hover:border-gray-300 transition-all text-sm appearance-none min-w-[140px]"
-            >
-              <option value="all">{t('filters.anyDistance')}</option>
-              <option value="5">{t('filters.within')} 5{t('filters.km')}</option>
-              <option value="10">{t('filters.within')} 10{t('filters.km')}</option>
-              <option value="25">{t('filters.within')} 25{t('filters.km')}</option>
-              <option value="50">{t('filters.within')} 50{t('filters.km')}</option>
-            </select>
-          </div>
-
-          {/* Sort By Dropdown */}
-          <div className="flex-shrink-0">
-            <select
-              value={sortBy}
-              onChange={(e) => dispatch(setSortBy(e.target.value as any))}
-              className="bg-primary-50 border-2 border-primary-100 rounded-xl px-4 py-2 font-bold text-primary-700 focus:border-primary-500 outline-none shadow-sm cursor-pointer transition-all text-sm appearance-none min-w-[150px]"
-            >
-              <option value="newest">✨ {t('filters.sort.newest')}</option>
-              <option value="price-low">💰 {t('filters.sort.priceLow')}</option>
-              <option value="closest">📍 {t('filters.sort.closest')}</option>
-            </select>
-          </div>
-
-
-          {(category !== 'all' || listingType !== 'all' || radius !== 'all' || searchQuery) && (
-            <div className="flex-shrink-0">
+            {/* Mobile Drawer Actions */}
+            <div className="p-4 bg-white border-t border-gray-200/60 flex gap-3 outline-none w-full max-w-md mx-auto pb-6">
               <button
-                onClick={() => dispatch(resetFilters())}
-                className="text-primary-600 font-bold text-sm hover:underline px-2 whitespace-nowrap"
+                onClick={() => { dispatch(resetFilters()); setIsFilterDrawerOpen(false); }}
+                className="flex-1 py-2.5 font-medium text-sm text-gray-700 border border-gray-300 bg-white hover:bg-gray-50 rounded-lg transition-all"
               >
                 {t('filters.clear')}
               </button>
+              <button
+                onClick={() => setIsFilterDrawerOpen(false)}
+                className="flex-shrink-0 w-2/3 py-2.5 font-medium text-[15px] text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-all"
+              >
+                Apply
+              </button>
             </div>
-          )}
-        </div>
+          </Drawer.Content>
+        </Drawer.Portal>
+      </Drawer.Root>
 
-      </div>
-
-      {/* Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {filteredProducts.length > 0 ? (
-          filteredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))
-        ) : (
-          <div className="col-span-full py-24 text-center space-y-4 bg-white rounded-3xl border-2 border-dashed border-gray-200">
-            <div className="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto text-gray-300">
-              <Filter size={40} />
-            </div>
-            <div className="space-y-1">
-              <h3 className="text-xl font-bold text-gray-900">{t('filters.noProducts')}</h3>
-              <p className="text-gray-500 font-medium">{t('filters.noProductsDesc')}</p>
-            </div>
-          </div>
-
-        )}
-      </div>
     </div>
   );
 };

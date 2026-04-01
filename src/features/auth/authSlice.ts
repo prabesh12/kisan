@@ -14,6 +14,8 @@ interface UserProfile {
   };
   bio: string;
   profilePhoto?: string;
+  farmName?: string;
+  specialty?: string;
 }
 
 interface AuthState {

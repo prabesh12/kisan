@@ -1,5 +1,5 @@
 import { MapPin, Calendar, ShoppingCart, Repeat, Gift, Phone } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import type { Product } from '../features/products/productSlice';
 import { calculateDistance, formatDistance } from '../utils/location';
@@ -17,6 +17,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { user } = useAppSelector((state) => state.auth);
   const { t } = useTranslation();
   const [isMapOpen, setIsMapOpen] = useState(false);
+  const navigate = useNavigate();
 
 
   const distance = user?.location.coordinates
@@ -51,7 +52,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
   return (
     <div className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 flex flex-col h-full relative">
-      <Link to={`/product/${product.id}`} className="flex flex-col h-full">
+      <div 
+        onClick={() => navigate(`/product/${product.id}`)} 
+        className="flex flex-col h-full cursor-pointer"
+      >
         {/* Top Image Section */}
 
       <div className="relative aspect-[4/3] sm:aspect-square overflow-hidden bg-gray-100">
@@ -104,10 +108,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </p>
 
         <div className="pt-2 mt-auto border-t border-gray-50 flex justify-between items-center text-[10px] text-gray-400 font-medium">
-          <div className="flex items-center space-x-1.5 overflow-hidden">
+          <Link 
+            to={`/seller/${product.sellerId}`}
+            onClick={(e) => e.stopPropagation()}
+            className="flex items-center space-x-1.5 overflow-hidden hover:text-primary-600 transition-colors"
+          >
             <div className="w-4 h-4 bg-primary-100 rounded-full flex-shrink-0" />
             <span className="truncate max-w-[60px] sm:max-w-[80px]">{product.sellerName}</span>
-          </div>
+          </Link>
           <div className="flex items-center space-x-1">
             <Calendar size={11} />
             <span>{new Date(product.createdAt).toLocaleDateString()}</span>
@@ -140,7 +148,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </a>
         </div>
       </div>
-    </Link>
+      </div>
 
 
 

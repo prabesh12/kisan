@@ -145,7 +145,7 @@ const ProductDetails: React.FC = () => {
                 </div>
                 <div className="flex items-center space-x-1 text-gray-500 font-bold bg-gray-50 px-3 py-1 rounded-lg text-sm">
                    <ShieldCheck size={16} className="text-green-500" />
-                   <span>Verified Listing</span>
+                   <span>{t('product.verifiedListing')}</span>
                 </div>
              </div>
              
@@ -158,7 +158,7 @@ const ProductDetails: React.FC = () => {
              
              {product.listingType === 'exchange' && (
                 <div className="bg-orange-50 border-2 border-orange-100 p-4 rounded-2xl">
-                   <div className="text-orange-600 font-black uppercase tracking-widest text-[10px] mb-1">Exchange For</div>
+                   <div className="text-orange-600 font-black uppercase tracking-widest text-[10px] mb-1">{t('product.exchangeFor')}</div>
                    <div className="text-orange-900 font-bold text-lg">{product.exchangePreference}</div>
                 </div>
              )}
@@ -205,15 +205,18 @@ const ProductDetails: React.FC = () => {
         {/* Seller Profile Card */}
         <div className="bg-white rounded-[3rem] border-2 border-gray-100 p-8 shadow-sm space-y-8">
            <div className="flex items-center justify-between">
-              <h3 className="font-black text-gray-900 uppercase tracking-widest text-sm">{i18n.language === 'en' ? 'Seller Information' : 'बिक्रेताको जानकारी'}</h3>
+              <h3 className="font-black text-gray-900 uppercase tracking-widest text-sm">{t('profile.title')}</h3>
               <div className="flex items-center space-x-1 text-primary-600 font-black text-sm">
                  <MapPin size={18} />
                  <span>{distance} km {t('product.away')}</span>
               </div>
            </div>
 
-           <div className="flex items-center space-x-6">
-              <div className="w-24 h-24 rounded-[2rem] overflow-hidden border-4 border-primary-50 shadow-xl">
+           <Link 
+             to={`/seller/${product.sellerId}`}
+             className="flex items-center space-x-6 hover:bg-gray-50 p-4 -m-4 rounded-[2.5rem] transition-all group"
+           >
+              <div className="w-24 h-24 rounded-[2rem] overflow-hidden border-4 border-primary-50 shadow-xl group-hover:border-primary-200 transition-all">
                  <img 
                    src={seller?.profilePhoto || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=200'} 
                    className="w-full h-full object-cover" 
@@ -221,17 +224,19 @@ const ProductDetails: React.FC = () => {
                  />
               </div>
               <div className="space-y-1">
-                 <h4 className="text-2xl font-black text-primary-900 leading-tight">{product.sellerName}</h4>
+                 <h4 className="text-2xl font-black text-primary-900 leading-tight group-hover:text-primary-600 transition-colors">
+                    {seller?.farmName || product.sellerName}
+                 </h4>
                  <div className="flex items-center space-x-2 text-gray-400 font-bold text-sm">
                     <Calendar size={14} />
                     <span>Joined Dec 2023</span>
                  </div>
                  <div className="flex items-center space-x-1 text-green-600 font-black text-xs uppercase tracking-widest">
                     <ShieldCheck size={14} />
-                    <span>Direct Farmer</span>
+                    <span>{t('product.verifiedListing')}</span>
                  </div>
               </div>
-           </div>
+           </Link>
 
            {seller?.bio && (
              <p className="text-gray-500 font-medium leading-relaxed italic border-l-4 border-primary-100 pl-4 py-1">
@@ -245,14 +250,14 @@ const ProductDetails: React.FC = () => {
                 className="flex items-center justify-center space-x-2 py-4 bg-gray-50 hover:bg-gray-100 text-gray-700 font-bold rounded-2xl transition-all active:scale-95"
               >
                  <MapPin size={20} className="text-primary-500" />
-                 <span>View Map</span>
+                 <span>{t('product.viewMap')}</span>
               </button>
               <a 
                 href={`tel:${product.contactNumber}`}
                 className="flex items-center justify-center space-x-2 py-4 bg-primary-50 hover:bg-primary-100 text-primary-700 font-bold rounded-2xl transition-all active:scale-95"
               >
                  <Phone size={20} />
-                 <span>Contact</span>
+                 <span>{t('auth.phoneLabel')}</span>
               </a>
            </div>
         </div>
@@ -263,7 +268,7 @@ const ProductDetails: React.FC = () => {
       <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-gray-100 p-4 pb-8 z-40 sm:hidden">
          <div className="flex items-center space-x-4 max-w-xl mx-auto">
             <div className="flex-1">
-               <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total Price</div>
+               <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('product.price')}</div>
                <div className="text-xl font-black text-primary-900">
                   {product.listingType === 'sell' ? `Rs. ${product.price}` : product.listingType === 'free' ? t('product.free') : 'Exchange'}
                </div>
@@ -273,7 +278,7 @@ const ProductDetails: React.FC = () => {
                className="bg-primary-600 text-white px-8 py-4 rounded-2xl font-bold flex items-center justify-center space-x-2 shadow-xl active:scale-95 transition-all flex-[2]"
             >
                <Phone size={20} />
-               <span>Call Seller</span>
+               <span>{t('product.callSeller')}</span>
             </a>
          </div>
       </div>

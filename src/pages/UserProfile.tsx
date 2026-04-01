@@ -19,6 +19,8 @@ const UserProfile: React.FC = () => {
     name: user?.name || '',
     bio: user?.bio || '',
     city: user?.location.city || '',
+    farmName: user?.farmName || '',
+    specialty: user?.specialty || 'General Farming',
   });
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -34,10 +36,11 @@ const UserProfile: React.FC = () => {
       location: {
         ...user.location,
         city: formData.city,
-      }
+      },
+      farmName: formData.farmName,
+      specialty: formData.specialty,
     }));
 
-    
     // Also save to our local storage "database"
     if (user) {
       saveUser({
@@ -47,7 +50,9 @@ const UserProfile: React.FC = () => {
         location: {
           ...user.location,
           city: formData.city,
-        }
+        },
+        farmName: formData.farmName,
+        specialty: formData.specialty,
       });
     }
 
@@ -146,6 +151,54 @@ const UserProfile: React.FC = () => {
               ) : (
                 <div className="bg-gray-50 px-5 py-4 rounded-3xl font-bold text-gray-700 border border-gray-100 leading-relaxed italic">
                   "{user.bio}"
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <label className="flex items-center space-x-2 text-primary-900 font-bold uppercase tracking-widest text-xs ml-1">
+                <FileText size={14} />
+                <span>{t('profile.farmName')}</span>
+              </label>
+
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={formData.farmName}
+                  onChange={(e) => setFormData({ ...formData, farmName: e.target.value })}
+                  placeholder="e.g. Green Hill Organics"
+                  className="w-full bg-gray-50 border-2 border-gray-100 px-4 py-3 rounded-2xl font-bold text-gray-700 focus:border-primary-500 outline-none transition-all"
+                />
+              ) : (
+                <div className="bg-gray-50 px-5 py-4 rounded-3xl font-bold text-gray-700 border border-gray-100">
+                  {user.farmName || t('profile.noFarmName')}
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <label className="flex items-center space-x-2 text-primary-900 font-bold uppercase tracking-widest text-xs ml-1">
+                <CheckCircle size={14} className="text-primary-600" />
+                <span>{t('profile.specialty')}</span>
+              </label>
+
+              {isEditing ? (
+                <select
+                  value={formData.specialty}
+                  onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
+                  className="w-full bg-gray-50 border-2 border-gray-100 px-4 py-3 rounded-2xl font-bold text-gray-700 focus:border-primary-500 outline-none transition-all"
+                >
+                  <option value={t('profile.specialties.general')}>{t('profile.specialties.general')}</option>
+                  <option value={t('profile.specialties.veg')}>{t('profile.specialties.veg')}</option>
+                  <option value={t('profile.specialties.fruit')}>{t('profile.specialties.fruit')}</option>
+                  <option value={t('profile.specialties.dairy')}>{t('profile.specialties.dairy')}</option>
+                  <option value={t('profile.specialties.meat')}>{t('profile.specialties.meat')}</option>
+                  <option value={t('profile.specialties.grain')}>{t('profile.specialties.grain')}</option>
+                  <option value={t('profile.specialties.organic')}>{t('profile.specialties.organic')}</option>
+                </select>
+              ) : (
+                <div className="inline-flex bg-primary-50 text-primary-700 px-5 py-3 rounded-2xl font-black text-sm uppercase tracking-wider border border-primary-100">
+                  {user.specialty || t('profile.specialties.general')}
                 </div>
               )}
             </div>
