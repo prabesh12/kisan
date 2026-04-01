@@ -106,7 +106,7 @@ const HomeFeed: React.FC = () => {
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       {/* Sticky Header & Search */}
-      <div className="sticky top-0 z-30 -mx-4 px-4 py-4 sm:mx-0 sm:px-0 bg-white/80 backdrop-blur-xl border-b border-gray-100/50 sm:border-none sm:bg-transparent">
+      <div className="sticky top-[64px] md:top-[74px] z-30 -mx-4 px-4 py-4 sm:mx-0 sm:px-0 bg-white/95 backdrop-blur-md border-b border-gray-100 sm:border-none">
         <div className="space-y-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
@@ -142,7 +142,7 @@ const HomeFeed: React.FC = () => {
 
       <div className="flex flex-col lg:flex-row gap-8 items-start w-full">
         {/* Desktop Sidebar (Persistent) */}
-        <aside className="hidden lg:block w-[260px] shrink-0 sticky top-32 z-10 bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+        <aside className="hidden lg:block w-[260px] shrink-0 sticky top-[165px] z-10 bg-white p-5 rounded-2xl border border-gray-100 shadow-sm max-h-[calc(100vh-185px)] overflow-y-auto no-scrollbar">
           <FilterSidebar />
         </aside>
 
