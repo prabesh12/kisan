@@ -20,6 +20,7 @@ interface UserProfile {
 
 interface AuthState {
   user: UserProfile | null;
+  token: string | null;
   isAuthenticated: boolean;
   guestLocation: {
     lat: number;
@@ -29,6 +30,7 @@ interface AuthState {
 
 const initialState: AuthState = {
   user: null,
+  token: null,
   isAuthenticated: false,
   guestLocation: null,
 };
@@ -37,12 +39,14 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    login: (state, action: PayloadAction<UserProfile>) => {
-      state.user = action.payload;
+    login: (state, action: PayloadAction<{ user: UserProfile; token: string }>) => {
+      state.user = action.payload.user;
+      state.token = action.payload.token;
       state.isAuthenticated = true;
     },
     logout: (state) => {
       state.user = null;
+      state.token = null;
       state.isAuthenticated = false;
     },
     updateProfile: (state, action: PayloadAction<Partial<UserProfile>>) => {
@@ -50,11 +54,18 @@ const authSlice = createSlice({
         state.user = { ...state.user, ...action.payload };
       }
     },
-    setLocation: (state, action: PayloadAction<{ lat: number; lng: number }>) => {
-      if (state.user) {
-        state.user.location.coordinates = action.payload;
+    setLocation: (state, action: PayloadAction<{ lat: number; lng: number; city?: string }>) => {
+      const city = action.payload.city || 'Current Location';
+      // Check if user exists and has a real ID (to avoid malformed persisted objects)
+      if (state.user && (state.user as any).id) {
+        if (!state.user.location) {
+          state.user.location = { city, coordinates: { lat: action.payload.lat, lng: action.payload.lng } };
+        } else {
+          state.user.location.coordinates = { lat: action.payload.lat, lng: action.payload.lng };
+          if (action.payload.city) state.user.location.city = action.payload.city;
+        }
       } else {
-        state.guestLocation = action.payload;
+        state.guestLocation = { lat: action.payload.lat, lng: action.payload.lng };
       }
     },
   },

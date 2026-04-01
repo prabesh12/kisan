@@ -1,157 +1,235 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Phone, LogIn, User, Globe } from 'lucide-react';
-import { useAppDispatch } from '../hooks/redux';
-import { login } from '../features/auth/authSlice';
-import { findUserByPhone, saveUser } from '../utils/storage';
-import { v4 as uuidv4 } from 'uuid';
+import { Phone, LogIn, User, Lock, ArrowRight } from 'lucide-react';
+import { useAppDispatch, useAppSelector } from '../hooks/redux';
+import { login as loginAction } from '../features/auth/authSlice';
 import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useMutation } from '@apollo/client/react';
+import { gql } from '@apollo/client';
 import PageTransition from '../components/PageTransition';
 
+const SIGNUP_MUTATION = gql`
+  mutation Signup($name: String!, $email: String!, $password: String!, $phoneNumber: String!, $location: LocationInput!) {
+    signup(name: $name, email: $email, password: $password, phoneNumber: $phoneNumber, location: $location) {
+      token
+      user {
+        id
+        name
+        email
+        phoneNumber
+        location {
+          city
+          coordinates {
+            lat
+            lng
+          }
+        }
+      }
+    }
+  }
+`;
 
-const loginSchema = z.object({
+const LOGIN_MUTATION = gql`
+  mutation Login($email: String!, $password: String!) {
+    login(email: $email, password: $password) {
+      token
+      user {
+        id
+        name
+        email
+        phoneNumber
+        location {
+          city
+          coordinates {
+            lat
+            lng
+          }
+        }
+      }
+    }
+  }
+`;
+
+interface SignupResponse {
+  signup: {
+    token: string;
+    user: any;
+  };
+}
+
+interface LoginResponse {
+  login: {
+    token: string;
+    user: any;
+  };
+}
+
+const authSchema = z.object({
   phoneNumber: z.string().regex(/^9\d{9}$/, "Phone number must be 10 digits starting with 9"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  name: z.string().min(2, "Name is required for registration").optional(),
 });
 
-type LoginFormData = z.infer<typeof loginSchema>;
+type AuthFormData = z.infer<typeof authSchema>;
 
 const LoginSignup: React.FC = () => {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLogin, setIsLogin] = useState(true);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { guestLocation } = useAppSelector((state) => state.auth);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema)
+  const { register, handleSubmit, formState: { errors } } = useForm<AuthFormData>({
+    resolver: zodResolver(authSchema)
   });
 
-  const onSubmit = (data: LoginFormData) => {
-    setIsLoading(true);
-    const { phoneNumber } = data;
-    
-    // Simulate network delay
-    setTimeout(() => {
-      let user = findUserByPhone(phoneNumber);
-      
-      if (!user) {
-        // Create new user if not found (Registration)
-        user = {
-          id: uuidv4(),
-          name: `User ${phoneNumber.slice(-4)}`,
-          phone: phoneNumber,
-          location: {
-            city: 'Kathmandu',
-            coordinates: { lat: 27.7172, lng: 85.3240 }
-          },
-          bio: 'New kisan member.'
-        };
-        saveUser(user);
+  const [loginMutation, { loading: loginLoading }] = useMutation<LoginResponse>(LOGIN_MUTATION);
+  const [signupMutation, { loading: signupLoading }] = useMutation<SignupResponse>(SIGNUP_MUTATION);
+
+  const isLoading = loginLoading || signupLoading;
+
+  const onSubmit = async (data: AuthFormData) => {
+    try {
+      if (isLogin) {
+        const { data: response } = await loginMutation({
+          variables: {
+            email: `${data.phoneNumber}@kisan.com`,
+            password: data.password
+          }
+        });
+        if (response?.login) {
+          dispatch(loginAction(response.login));
+          navigate('/home');
+        }
+      } else {
+        const { data: response } = await signupMutation({
+          variables: {
+            name: data.name || `User ${data.phoneNumber.slice(-4)}`,
+            email: `${data.phoneNumber}@kisan.com`,
+            password: data.password,
+            phoneNumber: data.phoneNumber,
+            location: {
+              city: 'Current Location',
+              coordinates: {
+                lat: guestLocation?.lat || 27.7172,
+                lng: guestLocation?.lng || 85.3240
+              }
+            }
+          }
+        });
+        if (response?.signup) {
+          dispatch(loginAction(response.signup));
+          navigate('/home');
+        }
       }
-      
-      dispatch(login(user));
-      setIsLoading(false);
-      navigate('/home');
-    }, 1200);
+    } catch (err: any) {
+      const message =
+        err?.graphQLErrors?.[0]?.message ||
+        err?.networkError?.result?.errors?.[0]?.message ||
+        err?.networkError?.message ||
+        err?.message ||
+        "Authentication failed.";
+      alert(message);
+    }
   };
-
-  const handleSocialAuth = (type: string) => {
-    console.log(`Authenticating with ${type}`);
-    // Social auth would typically redirect or open a popup
-    // For this prototype, we'll just show the loading state
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      alert(`${type} authentication is not implemented in this demo.`);
-    }, 800);
-  };
-
 
   return (
     <PageTransition>
-      <div className="max-w-md mx-auto py-12 px-6 bg-white rounded-2xl shadow-xl mt-12 border border-gray-100">
+      <div className="max-w-md mx-auto py-12 px-6 bg-white rounded-3xl shadow-2xl mt-12 border border-gray-100">
         <div className="text-center space-y-4 mb-10">
-          <h2 className="text-3xl font-bold font-heading text-primary-900 tracking-tight">{t('auth.welcome')}</h2>
-          <p className="text-gray-500 font-medium leading-relaxed">{t('auth.subtitle')}</p>
+          <div className="w-16 h-16 bg-primary-100 rounded-2xl flex items-center justify-center mx-auto text-primary-600 mb-4">
+            {isLogin ? <LogIn size={32} /> : <User size={32} />}
+          </div>
+          <h2 className="text-3xl font-black font-heading text-primary-900 tracking-tight">
+            {isLogin ? t('auth.welcome') : "Create Account"}
+          </h2>
+          <p className="text-gray-500 font-medium leading-relaxed">
+            {isLogin ? t('auth.subtitle') : "Join our community of farmers and buyers"}
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* Phone Login */}
-          <div className="space-y-2">
-            <label htmlFor="phoneNumber" className="block text-sm font-bold text-gray-700 ml-1 uppercase tracking-wider">
-              {t('auth.phoneLabel')}
-            </label>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          {!isLogin && (
+            <div className="space-y-2">
+              <label className="block text-xs font-black text-gray-400 ml-1 uppercase tracking-widest">Full Name</label>
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-primary-500 transition-colors">
+                  <User size={18} />
+                </div>
+                <input
+                  type="text"
+                  {...register('name')}
+                  placeholder="Ram Bahadur"
+                  className="block w-full pl-11 pr-4 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:ring-4 focus:ring-primary-50/50 focus:border-primary-500 outline-none transition-all font-bold"
+                />
+              </div>
+              {errors.name && <p className="text-red-500 text-[10px] font-bold ml-1">{errors.name.message}</p>}
+            </div>
+          )}
 
+          <div className="space-y-2">
+            <label className="block text-xs font-black text-gray-400 ml-1 uppercase tracking-widest">{t('auth.phoneLabel')}</label>
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-primary-500 transition-colors">
                 <Phone size={18} />
               </div>
               <input
                 type="tel"
-                id="phoneNumber"
                 {...register('phoneNumber')}
                 placeholder="984XXXXXXX"
-                className={`block w-full pl-11 pr-4 py-4 bg-gray-50 border-2 rounded-xl text-gray-900 focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all placeholder:text-gray-400 font-medium ${
-                  errors.phoneNumber ? 'border-red-500 bg-red-50' : 'border-gray-100'
-                }`}
+                className="block w-full pl-11 pr-4 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:ring-4 focus:ring-primary-50/50 focus:border-primary-500 outline-none transition-all font-bold"
               />
             </div>
-            {errors.phoneNumber && (
-              <p className="text-red-500 text-xs font-bold ml-1 animate-in fade-in slide-in-from-top-1">
-                {errors.phoneNumber.message}
-              </p>
-            )}
+            {errors.phoneNumber && <p className="text-red-500 text-[10px] font-bold ml-1">{errors.phoneNumber.message}</p>}
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-xs font-black text-gray-400 ml-1 uppercase tracking-widest">Password</label>
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-primary-500 transition-colors">
+                <Lock size={18} />
+              </div>
+              <input
+                type="password"
+                {...register('password')}
+                placeholder="••••••••"
+                className="block w-full pl-11 pr-4 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:ring-4 focus:ring-primary-50/50 focus:border-primary-500 outline-none transition-all font-bold"
+              />
+            </div>
+            {errors.password && <p className="text-red-500 text-[10px] font-bold ml-1">{errors.password.message}</p>}
           </div>
 
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-primary-600 text-white font-bold py-4 rounded-xl hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg transition-all flex items-center justify-center space-x-2 text-lg active:scale-[0.98]"
+            className="w-full bg-primary-600 text-white font-black py-5 rounded-2xl hover:bg-primary-700 disabled:opacity-50 shadow-xl shadow-primary-200 transition-all flex items-center justify-center space-x-3 text-lg active:scale-[0.98]"
           >
             {isLoading ? (
-              <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin" />
             ) : (
               <>
-                <LogIn size={20} />
-                <span>{t('auth.loginButton')}</span>
+                <span>{isLogin ? t('auth.loginButton') : "Sign Up"}</span>
+                <ArrowRight size={20} />
               </>
             )}
           </button>
         </form>
 
-        <div className="relative py-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-200"></div>
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-4 bg-white text-gray-500 font-bold uppercase tracking-widest">{t('auth.orContinue')}</span>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
+        <div className="mt-8 pt-6 border-t border-gray-50 text-center">
           <button
-            type="button"
-            onClick={() => handleSocialAuth('google')}
-            className="flex items-center justify-center space-x-2 border-2 border-gray-100 p-4 rounded-xl font-bold text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-[0.95]"
+            onClick={() => setIsLogin(!isLogin)}
+            className="text-sm font-bold text-gray-500 hover:text-primary-600 transition-colors underline underline-offset-4"
           >
-            <Globe size={20} />
-            <span>{t('common.google')}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleSocialAuth('github')}
-            className="flex items-center justify-center space-x-2 border-2 border-gray-100 p-4 rounded-xl font-bold text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-[0.95]"
-          >
-            <User size={20} />
-            <span>{t('common.github')}</span>
+            {isLogin ? "New to Kisan? Create an account" : "Already have an account? Log in"}
           </button>
         </div>
 
-        <p className="mt-8 text-center text-sm text-gray-500 font-medium italic">
-          {t('auth.terms')} <span className="underline cursor-pointer">{t('auth.termsLink')}</span>.
+        <p className="mt-8 text-center text-[10px] text-gray-400 font-bold uppercase tracking-widest leading-relaxed">
+          {t('auth.terms')} <br />
+          <span className="text-primary-500 cursor-pointer">{t('auth.termsLink')}</span>
         </p>
       </div>
     </PageTransition>

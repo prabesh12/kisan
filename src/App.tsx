@@ -2,8 +2,11 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
+import { ApolloProvider } from '@apollo/client/react/index.js';
 import { AnimatePresence } from 'framer-motion';
+import { useAppDispatch, useAppSelector } from './hooks/redux';
 import { store, persistor } from './app/store';
+import { client } from './apolloClient';
 import Layout from './components/Layout';
 import Landing from './pages/Landing';
 import LoginSignup from './pages/LoginSignup';
@@ -18,6 +21,18 @@ import LocationProvider from './components/LocationProvider';
 
 const AppContent: React.FC = () => {
   const location = useLocation();
+  const dispatch = useAppDispatch();
+  const { user } = useAppSelector((state) => state.auth);
+
+  React.useEffect(() => {
+    // Self-healing: if user exists but has missing required fields (from old sessions), clear it
+    if (user && !user.location) {
+      console.warn('Malformed user session detected. Clearing...');
+      import('./features/auth/authSlice').then(({ logout }) => {
+        dispatch(logout());
+      });
+    }
+  }, [user, dispatch]);
 
   return (
     <Layout>
@@ -43,11 +58,13 @@ const App: React.FC = () => {
   return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
-        <LocationProvider>
-          <Router>
-            <AppContent />
-          </Router>
-        </LocationProvider>
+        <ApolloProvider client={client}>
+          <LocationProvider>
+            <Router>
+              <AppContent />
+            </Router>
+          </LocationProvider>
+        </ApolloProvider>
       </PersistGate>
     </Provider>
   );

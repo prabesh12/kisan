@@ -55,3 +55,26 @@ export const getCurrentLocation = (): Promise<Coordinates> => {
     }
   });
 };
+/**
+ * Fetches the city/town name from coordinates using Nominatim Reverse Geocoding.
+ */
+export const fetchCityName = async (lat: number, lng: number): Promise<string> => {
+  try {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10&addressdetails=1`,
+      {
+        headers: {
+          'Accept-Language': 'en',
+          'User-Agent': 'Kisan-Marketplace-App'
+        }
+      }
+    );
+    const data = await response.json();
+    // Prioritize village, town, city, or county names
+    const address = data.address;
+    return address.village || address.town || address.city || address.county || address.suburb || 'Unknown Location';
+  } catch (error) {
+    console.error('Error fetching city name:', error);
+    return 'Unknown Location';
+  }
+};

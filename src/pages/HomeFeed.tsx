@@ -3,8 +3,9 @@ import { useAppSelector, useAppDispatch } from '../hooks/redux';
 import { useSearchParams } from 'react-router-dom';
 import { Drawer } from 'vaul';
 import { motion } from 'framer-motion';
+import { useQuery } from '@apollo/client/react/index.js';
+import { gql } from '@apollo/client/core/index.js';
 import { setProducts } from '../features/products/productSlice';
-import { getPersistentProducts } from '../utils/storage';
 import ProductCard from '../components/ProductCard';
 import FilterSidebar from '../components/FilterSidebar';
 import PageTransition from '../components/PageTransition';
@@ -37,22 +38,63 @@ const itemVariants = {
   },
 };
 
+const GET_PRODUCTS = gql`
+  query GetProducts($category: String, $listingType: String, $search: String) {
+    getProducts(category: $category, listingType: $listingType, search: $search) {
+      id
+      name
+      description
+      price
+      unit
+      quantity
+      category
+      listingType
+      photos
+      location {
+        city
+        coordinates {
+          lat
+          lng
+        }
+      }
+      seller {
+        id
+        name
+      }
+      status
+      tags
+      createdAt
+    }
+  }
+`;
+
+interface GetProductsData {
+  getProducts: any[];
+}
+
 const HomeFeed: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { items } = useAppSelector((state) => state.products);
   const { user } = useAppSelector((state) => state.auth);
   const { categories, listingTypes, radius, searchQuery, sortBy, minPrice, maxPrice } = useAppSelector((state) => state.filters);
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   const { t } = useTranslation();
 
   const [searchParams] = useSearchParams();
+  
+  const { data, loading, error } = useQuery<GetProductsData>(GET_PRODUCTS);
+  
+  const products = data?.getProducts || [];
 
   useEffect(() => {
-    // If store is empty, seed with persistent data
-    if (items.length === 0) {
-      dispatch(setProducts(getPersistentProducts()));
+    if (data?.getProducts) {
+      const mappedProducts = data.getProducts.map((p: any) => ({
+        ...p,
+        sellerId: p.seller.id,
+        sellerName: p.seller.name
+      }));
+      dispatch(setProducts(mappedProducts));
     }
-  }, [dispatch, items.length]);
+  }, [data, dispatch]);
 
   useEffect(() => {
     const query = searchParams.get('search');
@@ -63,78 +105,59 @@ const HomeFeed: React.FC = () => {
 
   // Set default sort to 'closest' if location is available
   useEffect(() => {
-    if (user?.location.coordinates && sortBy === 'newest') {
+    if (user?.location?.coordinates && sortBy === 'newest') {
       dispatch(setSortBy('closest'));
     }
-  }, [user?.location.coordinates, dispatch]); // Only run when coordinates become available
+  }, [user?.location?.coordinates, dispatch, sortBy]); 
 
 
   const filteredProducts = useMemo(() => {
-    let result = items.filter((product) => {
-      // Phase 2: Filter out SOLD items completely
+    let result = products.filter((product: any) => {
       if (product.status === 'sold') return false;
-
-      // Category filter (Multi-Select)
       if (categories && categories.length > 0 && !categories.includes(product.category)) return false;
-
-      // Listing type filter (Multi-Select)
       if (listingTypes && listingTypes.length > 0 && !listingTypes.includes(product.listingType)) return false;
-
-      // Search query filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         if (query.startsWith('#')) {
           const tagTrigger = query.slice(1);
-          if (!product.tags?.some(tag => tag.toLowerCase().includes(tagTrigger))) return false;
+          if (!product.tags?.some((tag: string) => tag.toLowerCase().includes(tagTrigger))) return false;
         } else {
           if (!product.name.toLowerCase().includes(query) &&
             !product.description.toLowerCase().includes(query)) return false;
         }
       }
-
-      // Price range filter
       if (minPrice !== null && (product.price || 0) < minPrice) return false;
       if (maxPrice !== null && (product.price || 0) > maxPrice) return false;
-
-
-      // Radius filter
       if (radius !== 'all' && user?.location.coordinates) {
         const distance = calculateDistance(user.location.coordinates, product.location.coordinates);
         if (distance > radius) return false;
       }
-
       return true;
     });
 
-    // Phase 2: Global Sorting
-    return [...result].sort((a, b) => {
+    return [...result].sort((a: any, b: any) => {
       if (sortBy === 'newest') {
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       }
-
       if (sortBy === 'price-low') {
         const priceA = a.listingType === 'sell' ? (a.price || 0) : 0;
         const priceB = b.listingType === 'sell' ? (b.price || 0) : 0;
         return priceA - priceB;
       }
-
       if (sortBy === 'closest' && user?.location.coordinates) {
         const distA = calculateDistance(user.location.coordinates, a.location.coordinates);
         const distB = calculateDistance(user.location.coordinates, b.location.coordinates);
         return distA - distB;
       }
-
       return 0;
     });
-  }, [items, categories, listingTypes, radius, searchQuery, sortBy, user, minPrice, maxPrice]);
+  }, [products, categories, listingTypes, radius, searchQuery, sortBy, user, minPrice, maxPrice]);
 
   const activeFilterCount = (categories?.length || 0) + (listingTypes?.length || 0) + (radius !== 'all' ? 1 : 0) + (minPrice !== null || maxPrice !== null ? 1 : 0);
-
 
   return (
     <PageTransition>
       <div className="space-y-8">
-        {/* Sticky Header & Search */}
         <div className="sticky top-[64px] md:top-[74px] z-30 -mx-4 px-4 py-4 sm:mx-0 sm:px-0 bg-gray-50/80 backdrop-blur-md border-b border-gray-100 sm:border-none">
           <div className="space-y-6 text-left">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -170,12 +193,10 @@ const HomeFeed: React.FC = () => {
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8 items-start w-full">
-          {/* Desktop Sidebar (Persistent) */}
           <aside className="hidden lg:block w-[280px] shrink-0 sticky top-[165px] z-10 bg-white p-6 rounded-2xl border border-gray-100 shadow-xl shadow-gray-200/50 max-h-[calc(100vh-185px)] overflow-y-auto no-scrollbar">
             <FilterSidebar />
           </aside>
 
-          {/* Main Grid Content */}
           <main className="flex-1 w-full min-w-0">
             <motion.div 
               variants={containerVariants}
@@ -184,7 +205,7 @@ const HomeFeed: React.FC = () => {
               className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6"
             >
               {filteredProducts.length > 0 ? (
-                filteredProducts.map((product) => (
+                filteredProducts.map((product: any) => (
                   <motion.div key={product.id} variants={itemVariants}>
                     <ProductCard product={product} />
                   </motion.div>
@@ -204,7 +225,6 @@ const HomeFeed: React.FC = () => {
           </main>
         </div>
 
-        {/* Vaul Native Mobile Drawer */}
         <Drawer.Root open={isFilterDrawerOpen} onOpenChange={setIsFilterDrawerOpen}>
           <Drawer.Portal>
             <Drawer.Overlay className="fixed inset-0 bg-black/40 z-[100]" />
@@ -223,7 +243,6 @@ const HomeFeed: React.FC = () => {
                 <FilterSidebar />
               </div>
 
-              {/* Mobile Drawer Actions */}
               <div className="p-6 bg-white border-t border-gray-50 flex gap-4 outline-none w-full max-w-md mx-auto pb-10">
                 <button
                   onClick={() => { dispatch(resetFilters()); setIsFilterDrawerOpen(false); }}

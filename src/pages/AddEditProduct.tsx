@@ -14,6 +14,64 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import PageTransition from '../components/PageTransition';
+import { gql } from '@apollo/client/core/index.js';
+import { useMutation } from '@apollo/client/react/index.js';
+
+const CREATE_PRODUCT_MUTATION = gql`
+  mutation CreateProduct(
+    $name: String!
+    $description: String!
+    $price: Float!
+    $quantity: Float!
+    $unit: String!
+    $category: String!
+    $listingType: String!
+    $exchangePreference: String
+    $photos: [String!]!
+    $location: LocationInput!
+  ) {
+    createProduct(
+      name: $name
+      description: $description
+      price: $price
+      quantity: $quantity
+      unit: $unit
+      category: $category
+      listingType: $listingType
+      exchangePreference: $exchangePreference
+      photos: $photos
+      location: $location
+    ) {
+      id
+      name
+    }
+  }
+`;
+
+const UPDATE_PRODUCT_MUTATION = gql`
+  mutation UpdateProduct(
+    $id: ID!
+    $name: String
+    $description: String
+    $price: Float
+    $quantity: Float
+    $unit: String
+    $status: String
+  ) {
+    updateProduct(
+      id: $id
+      name: $name
+      description: $description
+      price: $price
+      quantity: $quantity
+      unit: $unit
+      status: $status
+    ) {
+      id
+      name
+    }
+  }
+`;
 
 const phoneRegex = /^9\d{9}$/;
 
@@ -85,17 +143,25 @@ const AddEditProduct: React.FC = () => {
       exchangePreference: '',
       description: '',
       contactNumbers: ['', ''],
-      city: '',
-      coordinates: { lat: 27.7172, lng: 85.3240 },
+      city: user?.location?.city || '',
+      coordinates: user?.location?.coordinates || { lat: 27.7172, lng: 85.3240 },
       photos: [],
     }
+  });
+
+  const [createProduct] = useMutation(CREATE_PRODUCT_MUTATION, {
+    refetchQueries: ['GetProducts'],
+  });
+
+  const [updateProductMutation] = useMutation(UPDATE_PRODUCT_MUTATION, {
+    refetchQueries: ['GetProducts'],
   });
 
   const listingType = watch('listingType');
 
   useEffect(() => {
     if (isEditMode && existingProduct) {
-      const data = {
+      const data: any = {
         name: existingProduct.name,
         category: existingProduct.category,
         quantity: existingProduct.quantity,
@@ -104,19 +170,20 @@ const AddEditProduct: React.FC = () => {
         price: existingProduct.price || 0,
         exchangePreference: existingProduct.exchangePreference || '',
         description: existingProduct.description,
-        city: existingProduct.location.city,
-        coordinates: existingProduct.location.coordinates,
-        contactNumbers: (existingProduct.contactNumbers.length >= 2 
-          ? existingProduct.contactNumbers.slice(0, 2) 
-          : [existingProduct.contactNumbers[0] || '', '']) as [string, string],
-        photos: existingProduct.photos,
+        city: existingProduct.location?.city || '',
+        coordinates: existingProduct.location?.coordinates || { lat: 27.7172, lng: 85.3240 },
+        contactNumbers: [
+          existingProduct.contactNumbers?.[0] || '',
+          existingProduct.contactNumbers?.[1] || ''
+        ],
+        photos: existingProduct.photos || [],
       };
       reset(data);
-      setPhotos(existingProduct.photos);
+      setPhotos(existingProduct.photos || []);
     } else if (user) {
-      setValue('city', user.location.city);
-      setValue('coordinates', user.location.coordinates);
-      setValue('contactNumbers.0', user.phone);
+      if (user.location?.city) setValue('city', user.location.city);
+      if (user.location?.coordinates) setValue('coordinates', user.location.coordinates);
+      if (user.phone) setValue('contactNumbers.0', user.phone);
     }
   }, [isEditMode, existingProduct, user, reset, setValue]);
 
@@ -134,7 +201,7 @@ const AddEditProduct: React.FC = () => {
   }
 
 
-  const onSubmit = (data: ProductFormData) => {
+  const onSubmit = async (data: ProductFormData) => {
     setServerError(null);
     setIsSubmitting(true);
 
@@ -142,43 +209,43 @@ const AddEditProduct: React.FC = () => {
       // 1. Content Moderation Check
       validateContent(data.name, data.description);
 
-      // 2. Construct Product Object
-      const productData: Product = {
-        id: isEditMode ? id! : uuidv4(),
-        sellerId: user!.id,
-        sellerName: user!.name,
-        name: data.name,
-        category: data.category,
-        photos: photos.length > 0 ? photos : ['https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=400'],
-        quantity: data.quantity,
-        unit: data.unit,
-        listingType: data.listingType,
-        price: data.listingType === 'sell' ? data.price : undefined,
-        exchangePreference: data.listingType === 'exchange' ? data.exchangePreference : undefined,
-        description: data.description,
-        location: {
-          city: data.city,
-          coordinates: data.coordinates,
-        },
-        contactNumbers: data.contactNumbers,
-        tags: data.description.match(/#(\w+)/g)?.map(tag => tag.slice(1).toLowerCase()) || [],
-        createdAt: isEditMode && existingProduct ? existingProduct.createdAt : new Date().toISOString(),
-        status: (isEditMode && existingProduct ? existingProduct.status : 'active') as 'active' | 'sold',
-        views: isEditMode && existingProduct ? existingProduct.views : 0,
-      };
-
-      // 3. Dispatch action and save to persistent storage
-      if (isEditMode) {
-        dispatch(updateProduct(productData));
+      // 2. Execute Mutation
+      if (isEditMode && id) {
+        await updateProductMutation({
+          variables: {
+            id,
+            name: data.name,
+            description: data.description,
+            price: data.price,
+            quantity: data.quantity,
+            unit: data.unit,
+            status: (existingProduct as any)?.status || 'active'
+          }
+        });
       } else {
-        dispatch(addProduct(productData));
+        await createProduct({
+          variables: {
+            name: data.name,
+            description: data.description,
+            price: data.price || 0,
+            quantity: data.quantity,
+            unit: data.unit,
+            category: data.category,
+            listingType: data.listingType,
+            exchangePreference: data.exchangePreference,
+            photos: photos.length > 0 ? photos : ['https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=400'],
+            location: {
+              city: data.city,
+              coordinates: data.coordinates
+            }
+          }
+        });
       }
-      savePersistentProduct(productData);
 
       // 4. Redirect
       navigate('/home');
     } catch (err: any) {
-      setServerError(err.message);
+      setServerError(err.graphQLErrors?.[0]?.message || err.message);
     } finally {
       setIsSubmitting(false);
     }

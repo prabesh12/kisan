@@ -204,20 +204,21 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             {product.description}
           </p>
 
-          <div className="pt-3 mt-auto border-t border-gray-50 flex justify-between items-center text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+          {/* Seller & Date Info */}
+          <div className="flex items-center justify-between text-xs text-gray-500 font-bold">
             <Link 
               to={`/seller/${product.sellerId}`}
               onClick={(e) => e.stopPropagation()}
-              className="flex items-center space-x-2 overflow-hidden hover:text-emerald-600 transition-colors"
+              className="flex items-center space-x-2 hover:text-emerald-600 transition-colors bg-gray-50 px-2 py-1 rounded-lg"
             >
-              <div className="w-5 h-5 bg-emerald-50 rounded-lg flex items-center justify-center text-emerald-600 flex-shrink-0">
-                 <Calendar size={10} />
+              <div className="w-5 h-5 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-700">
+                <span className="text-[10px]">{product.sellerName?.charAt(0).toUpperCase()}</span>
               </div>
-              <span className="truncate max-w-[80px]">{product.sellerName}</span>
+              <span>{product.sellerName}</span>
             </Link>
-            <div className="flex items-center space-x-1.5">
-              <Calendar size={11} className="text-gray-300" />
-              <span>{new Date(product.createdAt).toLocaleDateString()}</span>
+            <div className="flex items-center space-x-1.5 text-gray-400">
+              <Calendar size={14} />
+              <span>{new Date(product.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
             </div>
           </div>
 
