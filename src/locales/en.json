@@ -40,6 +40,7 @@
     "success": "Profile updated successfully!",
     "joined": "Joined",
     "farmName": "Farm Name",
+    "farmNamePlaceholder": "e.g. Green Hill Organics",
     "specialty": "Primary Specialty",
     "noFarmName": "No farm name set",
     "digitalStorefront": "Digital Storefront",
@@ -58,14 +59,21 @@
       "grain": "Grain Production",
       "organic": "Organic Expert"
     },
-    "defaultBio": "Experienced farmer dedicated to providing high-quality agricultural products to the community."
+    "defaultBio": "Experienced farmer dedicated to providing high-quality agricultural products to the community.",
+    "joinedOn": "Joined",
+    "current": "Current",
+    "offeredItems": "Offered Items"
   },
   "listings": {
     "title": "Seller Hub",
     "active": "Your Active Listings",
     "empty": "You don't have any products listed yet.",
     "startSelling": "Start Selling",
-    "markAsSold": "Mark as Sold",
+    "markAsSold": "Mark Sold",
+    "markActive": "Mark Active",
+    "reactive": "Reactive",
+    "editProduct": "Edit Product",
+    "deleteListing": "Delete Listing",
     "deleteConfirm": "Are you sure you want to delete this listing?",
     "stats": {
       "active": "Active Listings",
@@ -79,8 +87,9 @@
     "quantity": "Quantity",
     "unit": "Unit",
     "listingType": "Listing Type",
-    "price": "Price (Rs.)",
+    "price": "Price per Unit (Rs.)",
     "exchange": "Exchange Preference",
+    "exchangePlaceholder": "What do you want in return? (e.g. Rice, Potatoes)",
     "description": "Description",
     "publish": "Publish Product",
     "update": "Update Product",
@@ -90,6 +99,15 @@
     "away": "away",
     "free": "FREE DONATION",
     "exchangeFor": "Exchange for:",
+    "quantityDetails": "Quantity Details",
+    "totalStock": "Total Stock",
+    "amount": "Amount",
+    "commonUnits": "Common Units",
+    "unitPlaceholder": "e.g. kg, ltr, bunch",
+    "available": "Available",
+    "sold": "Sold",
+    "contactPrimary": "Contact Detail 1 (Primary)",
+    "contactSecondary": "Contact Detail 2 (Secondary)",
     "uploadPhoto": "Upload Product Photo",
     "tapToUpload": "Tap to upload photo",
     "remove": "Remove",
@@ -97,9 +115,15 @@
     "viewMap": "View Map",
     "verifiedListing": "Verified Listing",
     "contactHelp": "Buyers will use this number to contact you directly.",
-    "notFound": "Product not found"
+    "contactHelpDetail": "Both must be 10 digits starting with 9.",
+    "notFound": "Product not found",
+    "navigateMaps": "Navigate in Google Maps",
+    "yourLocation": "Your Location",
+    "sellerLocation": "Seller Location",
+    "close": "Close"
   },
   "filters": {
+    "title": "Filters",
     "freshIn": "Fresh in",
     "yourArea": "Your Area",
     "searchPlaceholder": "Search vegetables, fruits...",
@@ -109,6 +133,15 @@
     "within": "Within",
     "km": "km",
     "clear": "Clear Filters",
+    "apply": "Apply Filters",
+    "reset": "Reset",
+    "min": "MIN",
+    "max": "MAX",
+    "radiusHelp": "Radius from your location",
+    "listingTypeTitle": "Listing Type",
+    "sortTitle": "Sort By",
+    "priceRange": "Price Range (Rs.)",
+    "locationDistance": "Location & Distance",
     "sort": {
       "newest": "Newest Arrival",
       "priceLow": "Price: Low to High",
@@ -132,5 +165,10 @@
       "exchange": "Exchange",
       "free": "Free"
     }
+  },
+  "common": {
+    "google": "Google",
+    "github": "GitHub",
+    "confirmDelete": "Are you sure you want to delete this listing?"
   }
 }

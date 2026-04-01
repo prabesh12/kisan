@@ -213,7 +213,7 @@ const AddEditProduct: React.FC = () => {
               <ArrowLeft size={24} />
             </button>
             <h2 className="text-3xl font-black font-heading text-primary-900 tracking-tight">
-              {isEditMode ? t('product.editTitle') : t('product.addTitle')} <span className="text-primary-600">Product</span>
+              {isEditMode ? t('product.editTitle') : t('product.addTitle')} <span className="text-primary-600">{t('nav.add')}</span>
             </h2>
           </div>
 
@@ -297,7 +297,7 @@ const AddEditProduct: React.FC = () => {
             </div>
 
             <div className="md:col-span-1">
-              <label className="block text-sm font-bold text-gray-700 ml-1 mb-2 uppercase tracking-widest">Category</label>
+              <label className="block text-sm font-bold text-gray-700 ml-1 mb-2 uppercase tracking-widest">{t('product.category')}</label>
               <select
                 {...register('category')}
                 className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl shadow-sm focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all font-bold"
@@ -313,38 +313,65 @@ const AddEditProduct: React.FC = () => {
 
 
             {/* Enhanced Quantity & Unit Section */}
-            <div className="md:col-span-1 bg-primary-50/50 p-6 rounded-2xl border border-primary-100/50 shadow-inner">
-              <label className="block text-xs font-black text-primary-700 ml-1 mb-4 uppercase tracking-[0.2em] flex items-center space-x-2">
-                <Scale size={14} />
-                <span>Quantity Details</span>
-              </label>
+            <div className="md:col-span-2 bg-primary-50/30 p-6 rounded-2xl border border-primary-100/50 shadow-sm space-y-6">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-black text-primary-700 ml-1 uppercase tracking-[0.2em] flex items-center space-x-2">
+                  <Scale size={14} />
+                  <span>{t('product.quantityDetails')}</span>
+                </label>
+                <div className="flex items-center space-x-2 text-[10px] text-primary-600/60 font-bold uppercase tracking-tighter">
+                  <Package size={12} />
+                  <span>{t('product.totalStock')}</span>
+                </div>
+              </div>
               
-              <div className="flex items-center space-x-3">
-                <div className="flex-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <span className="text-[10px] font-black text-gray-400 uppercase ml-1">{t('product.amount')}</span>
                   <input
                     type="number"
                     min="0"
                     step="0.1"
                     {...register('quantity', { valueAsNumber: true })}
-                    className={`w-full px-4 py-3 bg-white border-2 rounded-xl shadow-sm focus:ring-2 focus:ring-primary-400 outline-none transition-all font-black text-lg text-primary-900 ${
+                    className={`w-full px-5 py-4 bg-white border-2 rounded-xl shadow-sm focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all font-black text-xl text-primary-900 ${
                       errors.quantity ? 'border-red-500' : 'border-primary-100'
                     }`}
                   />
                 </div>
-                <div className="w-1/3">
-                  <input
-                    type="text"
-                    placeholder="unit"
-                    {...register('unit')}
-                    className={`w-full px-4 py-3 bg-white border-2 rounded-xl shadow-sm focus:ring-2 focus:ring-primary-400 outline-none transition-all font-bold text-gray-700 text-center uppercase tracking-widest ${
-                      errors.unit ? 'border-red-500' : 'border-primary-100'
-                    }`}
-                  />
+                <div className="space-y-2">
+                  <span className="text-[10px] font-black text-gray-400 uppercase ml-1">{t('product.unit')}</span>
+                  <div className="relative group">
+                    <input
+                      type="text"
+                      placeholder={t('product.unitPlaceholder')}
+                      {...register('unit')}
+                      className={`w-full px-5 py-4 bg-white border-2 rounded-xl shadow-sm focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all font-bold text-gray-700 placeholder:text-gray-300 ${
+                        errors.unit ? 'border-red-500' : 'border-primary-100'
+                      }`}
+                    />
+                  </div>
                 </div>
               </div>
-              <div className="mt-3 flex items-center space-x-2 text-[10px] text-primary-600/60 font-bold uppercase tracking-tighter">
-                <Package size={12} />
-                <span>Specify total available stock & unit</span>
+
+              {/* Unit suggestions */}
+              <div className="pt-2">
+                 <p className="text-[10px] font-black text-gray-400 uppercase mb-3 ml-1 tracking-widest">{t('product.commonUnits')}</p>
+                 <div className="flex flex-wrap gap-2">
+                    {['kg', 'gm', 'quintal', 'ltr', 'bunch', 'piece', 'dozen'].map((u) => (
+                      <button
+                        key={u}
+                        type="button"
+                        onClick={() => setValue('unit', u)}
+                        className={`px-4 py-2 rounded-lg text-xs font-bold transition-all border-2 ${
+                          watch('unit') === u 
+                          ? 'bg-primary-600 border-primary-600 text-white shadow-md scale-105' 
+                          : 'bg-white border-gray-100 text-gray-500 hover:border-primary-200 hover:text-primary-600'
+                        }`}
+                      >
+                        {u}
+                      </button>
+                    ))}
+                 </div>
               </div>
             </div>
 
@@ -389,7 +416,7 @@ const AddEditProduct: React.FC = () => {
 
                 <input
                   type="text"
-                  placeholder="What do you want in return? (e.g. Rice, Potatoes)"
+                  placeholder={t('product.exchangePlaceholder')}
                   {...register('exchangePreference')}
                   className={`w-full px-5 py-4 bg-gray-50 border-2 rounded-2xl shadow-sm focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all font-bold ${
                     errors.exchangePreference ? 'border-red-500' : 'border-gray-100'
@@ -412,7 +439,7 @@ const AddEditProduct: React.FC = () => {
 
             <div className="md:col-span-2 border-t border-gray-50 pt-8">
               <label className="block text-sm font-bold text-gray-700 ml-1 mb-4 uppercase tracking-widest">
-                Contact Detail 1 (Primary)
+                {t('product.contactPrimary')}
               </label>
               <input
                 type="tel"
@@ -424,7 +451,7 @@ const AddEditProduct: React.FC = () => {
               />
               
               <label className="block text-sm font-bold text-gray-700 ml-1 mb-4 uppercase tracking-widest">
-                Contact Detail 2 (Secondary)
+                {t('product.contactSecondary')}
               </label>
               <input
                 type="tel"
@@ -435,7 +462,7 @@ const AddEditProduct: React.FC = () => {
                 }`}
               />
                <p className="mt-2 text-[10px] sm:text-xs text-gray-400 font-medium px-1">
-                  {i18n.language === 'en' ? 'Buyers will use these numbers to contact you directly. Both must be 10 digits starting with 9.' : 'खरीदकर्ताहरूले तपाईंलाई सिधै सम्पर्क गर्न यी नम्बरहरू प्रयोग गर्नेछन्। दुबै ९ बाट सुरु हुने १० अंकको हुनुपर्छ।'}
+                  {t('product.contactHelp')} {t('product.contactHelpDetail')}
                </p>
             </div>
 

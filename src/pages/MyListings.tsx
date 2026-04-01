@@ -166,7 +166,7 @@ const MyListings: React.FC = () => {
                       ) : (
                           <>
                               <CheckCircle2 size={18} className="text-green-600" />
-                              <span>Reactive</span>
+                              <span>{t('listings.reactive')}</span>
                           </>
                       )}
                   </button>

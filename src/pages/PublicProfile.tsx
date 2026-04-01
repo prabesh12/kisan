@@ -170,7 +170,7 @@ const PublicProfile: React.FC = () => {
         <div className="space-y-8 pt-6">
            <div className="flex items-center justify-between px-2">
               <h2 className="text-2xl font-black text-primary-900 tracking-tight font-heading">
-                 Current <span className="text-primary-600">Offered Items</span>
+                 {t('profile.current')} <span className="text-primary-600">{t('profile.offeredItems')}</span>
               </h2>
               <div className="h-1 flex-1 bg-gray-50 mx-6 rounded-full" />
            </div>

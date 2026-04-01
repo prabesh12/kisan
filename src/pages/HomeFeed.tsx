@@ -158,7 +158,7 @@ const HomeFeed: React.FC = () => {
                 className="lg:hidden flex-shrink-0 flex items-center space-x-2 bg-white border-2 border-gray-100 px-5 py-3 rounded-xl hover:bg-gray-50 transition-all text-sm font-bold text-gray-700 relative active:scale-95"
               >
                 <Filter size={16} className={activeFilterCount > 0 ? 'text-primary-600' : 'text-gray-500'} />
-                <span>Filters</span>
+                <span>{t('filters.title')}</span>
                 {activeFilterCount > 0 && (
                   <span className="absolute -top-2 -right-2 bg-primary-600 text-white text-[10px] min-w-5 h-5 flex items-center justify-center rounded-full font-bold shadow-sm px-1">
                     {activeFilterCount}
@@ -212,7 +212,7 @@ const HomeFeed: React.FC = () => {
               <div className="p-6 bg-white rounded-t-[1.5rem] flex-1 overflow-y-auto w-full max-w-md mx-auto relative no-scrollbar">
                 <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-gray-200 mb-8" />
                 <div className="flex justify-between items-center mb-8">
-                  <h2 className="text-2xl font-black text-primary-900 font-heading">Filters</h2>
+                  <h2 className="text-2xl font-black text-primary-900 font-heading">{t('filters.title')}</h2>
                   <button
                     onClick={() => setIsFilterDrawerOpen(false)}
                     className="bg-gray-100 hover:bg-gray-200 p-3 rounded-xl text-gray-400 transition-colors active:scale-90"
@@ -235,7 +235,7 @@ const HomeFeed: React.FC = () => {
                   onClick={() => setIsFilterDrawerOpen(false)}
                   className="flex-shrink-0 w-2/3 py-4 font-black text-white bg-primary-600 hover:bg-primary-700 rounded-2xl transition-all shadow-xl shadow-primary-200 active:scale-95"
                 >
-                  Apply Filters
+                  {t('filters.apply')}
                 </button>
               </div>
             </Drawer.Content>

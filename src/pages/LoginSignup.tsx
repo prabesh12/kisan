@@ -137,7 +137,7 @@ const LoginSignup: React.FC = () => {
             className="flex items-center justify-center space-x-2 border-2 border-gray-100 p-4 rounded-xl font-bold text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-[0.95]"
           >
             <Globe size={20} />
-            <span>Google</span>
+            <span>{t('common.google')}</span>
           </button>
 
           <button
@@ -146,7 +146,7 @@ const LoginSignup: React.FC = () => {
             className="flex items-center justify-center space-x-2 border-2 border-gray-100 p-4 rounded-xl font-bold text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-[0.95]"
           >
             <User size={20} />
-            <span>GitHub</span>
+            <span>{t('common.github')}</span>
           </button>
         </div>
 

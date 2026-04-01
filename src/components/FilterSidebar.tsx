@@ -49,7 +49,7 @@ const FilterSidebar: React.FC = () => {
 
       {/* Listing Type Section */}
       <div className="space-y-3">
-        <h4 className="font-semibold text-gray-900 text-[15px]">Listing Type</h4>
+        <h4 className="font-semibold text-gray-900 text-[15px]">{t('filters.listingTypeTitle')}</h4>
         <div className="flex bg-gray-100/80 p-1 rounded-lg">
           {['sell', 'exchange', 'free'].map((type, index) => {
              const isSelected = listingTypes?.includes(type as ListingType) || false;
@@ -75,7 +75,7 @@ const FilterSidebar: React.FC = () => {
 
       {/* Sort Section */}
       <div className="space-y-3">
-        <h4 className="font-semibold text-gray-900 text-[15px]">Sort By</h4>
+        <h4 className="font-semibold text-gray-900 text-[15px]">{t('filters.sortTitle')}</h4>
         <div className="relative">
           <select
             value={sortBy}
@@ -93,19 +93,19 @@ const FilterSidebar: React.FC = () => {
       {/* Price Range Section */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h4 className="font-semibold text-gray-900 text-[15px]">Price Range (Rs.)</h4>
+          <h4 className="font-semibold text-gray-900 text-[15px]">{t('filters.priceRange')}</h4>
           {(minPrice !== null || maxPrice !== null) && (
             <button 
               onClick={() => dispatch(setPriceRange({ min: null, max: null }))}
               className="text-[10px] font-black text-primary-600 uppercase tracking-widest hover:underline"
             >
-              Reset
+              {t('filters.reset')}
             </button>
           )}
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="relative group">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-400 group-focus-within:text-primary-500 transition-colors">MIN</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-400 group-focus-within:text-primary-500 transition-colors">{t('filters.min')}</span>
             <input
               type="number"
               placeholder="0"
@@ -115,7 +115,7 @@ const FilterSidebar: React.FC = () => {
             />
           </div>
           <div className="relative group">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-400 group-focus-within:text-primary-500 transition-colors">MAX</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-400 group-focus-within:text-primary-500 transition-colors">{t('filters.max')}</span>
             <input
               type="number"
               placeholder="10K+"
@@ -131,7 +131,7 @@ const FilterSidebar: React.FC = () => {
 
       {/* Distance Section */}
       <div className="space-y-3 text-left">
-        <h4 className="font-semibold text-gray-900 text-[15px]">Location & Distance</h4>
+        <h4 className="font-semibold text-gray-900 text-[15px]">{t('filters.locationDistance')}</h4>
         <div className="relative">
           <select
             value={radius}
@@ -139,14 +139,14 @@ const FilterSidebar: React.FC = () => {
             className="w-full appearance-none bg-gray-50/50 border border-gray-200 rounded-lg pl-9 pr-3 py-2.5 text-[13px] text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 transition-all cursor-pointer"
           >
             <option value="all">{t('filters.anyDistance')}</option>
-            <option value="5">Within 5 km</option>
-            <option value="10">Within 10 km</option>
-            <option value="25">Within 25 km</option>
-            <option value="50">Within 50 km</option>
+            <option value="5">{t('filters.within')} 5 {t('filters.km')}</option>
+            <option value="10">{t('filters.within')} 10 {t('filters.km')}</option>
+            <option value="25">{t('filters.within')} 25 {t('filters.km')}</option>
+            <option value="50">{t('filters.within')} 50 {t('filters.km')}</option>
           </select>
           <Crosshair size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
         </div>
-        <p className="text-[10px] text-gray-400 mt-1 uppercase tracking-widest font-bold">Radius from your location</p>
+        <p className="text-[10px] text-gray-400 mt-1 uppercase tracking-widest font-bold">{t('filters.radiusHelp')}</p>
       </div>
 
     </div>

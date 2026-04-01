@@ -63,9 +63,9 @@ const ProductDetails: React.FC = () => {
   if (!product) {
     return (
       <div className="flex flex-col items-center justify-center py-24 space-y-4">
-        <h2 className="text-2xl font-bold text-gray-900">Product not found</h2>
+        <h2 className="text-2xl font-bold text-gray-900">{t('product.notFound')}</h2>
         <button onClick={() => navigate('/home')} className="bg-primary-600 text-white px-6 py-3 rounded-xl font-bold">
-          Back to Home
+          {t('nav.home')}
         </button>
       </div>
     );
@@ -110,10 +110,10 @@ const ProductDetails: React.FC = () => {
         
         {/* Sold Overlay */}
         {product.status === 'sold' && (
-          <div className="absolute inset-0 bg-black/20 flex items-center justify-center p-12">
-             <div className="bg-white/90 backdrop-blur-md px-8 py-3 rounded-full shadow-2xl border-4 border-green-600 text-green-700 font-black text-2xl uppercase tracking-[0.3em] rotate-[-12deg] flex items-center space-x-3">
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center p-12">
+             <div className="bg-white px-8 py-3 rounded-full shadow-2xl border-4 border-emerald-600 text-emerald-700 font-extrabold text-2xl uppercase tracking-[0.3em] rotate-[-12deg] flex items-center space-x-3">
                 <CheckCircle2 size={24} />
-                <span>Sold</span>
+                <span>{t('product.sold')}</span>
              </div>
           </div>
         )}
@@ -134,10 +134,10 @@ const ProductDetails: React.FC = () => {
         {/* Floating Status Badges */}
         <div className="absolute bottom-8 left-8 flex flex-col space-y-2">
           <div className="flex space-x-2">
-            <span className="bg-white/20 backdrop-blur-md text-white px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest border border-white/30">
+            <span className="bg-white text-gray-900 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest border border-white/20">
               {t(`filters.categories.${product.category}`)}
             </span>
-            <span className="bg-primary-600/90 backdrop-blur-md text-white px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest border border-primary-500">
+            <span className="bg-emerald-600 text-white px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest border border-emerald-500">
                {t(`filters.types.${product.listingType}`)}
             </span>
           </div>
@@ -164,11 +164,20 @@ const ProductDetails: React.FC = () => {
                 </div>
              </div>
              
-             <div className="flex items-baseline space-x-2">
-                <span className="text-5xl font-black text-primary-900">
-                  {product.listingType === 'sell' ? `Rs. ${product.price}` : product.listingType === 'free' ? t('product.free') : 'Exchange'}
+             <div className="flex flex-col">
+                <span className="text-5xl font-black text-primary-900 leading-tight">
+                  {product.listingType === 'sell' ? (
+                    <>
+                      Rs. {product.price}
+                      <span className="text-2xl text-gray-400 font-bold ml-2">/ {product.unit}</span>
+                    </>
+                  ) : product.listingType === 'free' ? t('product.free') : t('filters.types.exchange')}
                 </span>
-                <span className="text-gray-400 font-bold text-lg">/ {product.quantity} {product.unit}</span>
+                <div className="inline-flex items-center space-x-1 mt-1">
+                   <span className="bg-primary-50 text-primary-600 px-3 py-1 rounded-lg text-sm font-black uppercase tracking-widest">
+                      {product.quantity} {product.unit} {t('product.available')}
+                   </span>
+                </div>
              </div>
              
              {product.listingType === 'exchange' && (
@@ -292,8 +301,11 @@ const ProductDetails: React.FC = () => {
          <div className="flex items-center space-x-4 max-w-xl mx-auto">
             <div className="flex-1">
                <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('product.price')}</div>
-               <div className="text-xl font-black text-primary-900">
-                  {product.listingType === 'sell' ? `Rs. ${product.price}` : product.listingType === 'free' ? t('product.free') : 'Exchange'}
+               <div className="text-xl font-black text-primary-900 leading-none">
+                  {product.listingType === 'sell' ? `Rs. ${product.price}` : product.listingType === 'free' ? t('product.free') : t('filters.types.exchange')}
+                  <div className="text-[10px] text-gray-400 font-bold uppercase mt-0.5 tracking-tighter">
+                     / {product.unit} ({product.quantity} {t('product.available')})
+                  </div>
                </div>
             </div>
             <a 

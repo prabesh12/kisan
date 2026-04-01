@@ -167,7 +167,7 @@ const UserProfile: React.FC = () => {
                     type="text"
                     value={formData.farmName}
                     onChange={(e) => setFormData({ ...formData, farmName: e.target.value })}
-                    placeholder="e.g. Green Hill Organics"
+                    placeholder={t('profile.farmNamePlaceholder') || 'e.g. Green Hill Organics'}
                     className="w-full bg-gray-50 border-2 border-gray-100 px-4 py-3 rounded-xl font-bold text-gray-700 focus:border-primary-500 outline-none transition-all"
                   />
                 ) : (

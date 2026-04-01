@@ -63,9 +63,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const getBadgeStyles = (type: string) => {
     switch (type) {
       case 'free':
-        return 'bg-green-100 text-green-700 border-green-200';
+        return 'bg-emerald-100 text-emerald-700 border-emerald-200';
       case 'exchange':
-        return 'bg-blue-100 text-blue-700 border-blue-200';
+        return 'bg-indigo-100 text-indigo-700 border-indigo-200';
       case 'sell':
         return 'bg-amber-100 text-amber-700 border-amber-200';
       default:
@@ -88,8 +88,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
   return (
     <motion.div 
-      whileHover={{ y: -5, transition: { duration: 0.2 } }}
-      className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-300 border border-gray-100 flex flex-col h-full relative"
+      layout
+      whileHover={{ y: -8, scale: 1.01 }}
+      className="group bg-white rounded-2xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgba(34,197,94,0.12)] transition-all duration-500 border border-gray-100 flex flex-col h-full relative"
     >
       {/* Manage Button (Owner Only) */}
       {isOwner && (
@@ -99,7 +100,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               e.stopPropagation();
               setShowManageMenu(!showManageMenu);
             }}
-            className="p-2 bg-white/90 backdrop-blur-md rounded-xl shadow-lg border border-gray-100 text-gray-600 hover:text-primary-600 transition-colors active:scale-90"
+            className="p-2.5 bg-white rounded-2xl shadow-xl border border-gray-100 text-gray-600 hover:text-primary-600 transition-all active:scale-90 flex items-center justify-center"
           >
             <MoreVertical size={20} />
           </button>
@@ -118,7 +119,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 >
                   <CheckCircle2 size={18} className={product.status === 'sold' ? 'text-green-500' : 'text-gray-400'} />
                   <span className="text-sm font-bold text-gray-700">
-                    {product.status === 'sold' ? 'Mark Active' : 'Mark Sold'}
+                    {product.status === 'sold' ? t('listings.markActive') : t('listings.markAsSold')}
                   </span>
                 </button>
                 <button
@@ -126,7 +127,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                   className="w-full flex items-center space-x-3 px-4 py-3 text-left rounded-xl hover:bg-blue-50 transition-colors"
                 >
                   <Edit2 size={18} className="text-blue-500" />
-                  <span className="text-sm font-bold text-gray-700">Edit Product</span>
+                  <span className="text-sm font-bold text-gray-700">{t('listings.editProduct')}</span>
                 </button>
                 <div className="h-px bg-gray-50 my-1 mx-2" />
                 <button
@@ -134,7 +135,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                   className="w-full flex items-center space-x-3 px-4 py-3 text-left rounded-xl hover:bg-red-50 transition-colors"
                 >
                   <Trash2 size={18} className="text-red-500" />
-                  <span className="text-sm font-bold text-red-600">Delete Listing</span>
+                  <span className="text-sm font-bold text-red-600">{t('listings.deleteListing')}</span>
                 </button>
               </motion.div>
             )}
@@ -156,10 +157,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           
           {/* Sold Overlay */}
           {product.status === 'sold' && (
-             <div className="absolute inset-0 bg-black/20 flex items-center justify-center p-6">
-                <div className="bg-white/90 backdrop-blur-md px-4 py-1.5 rounded-full shadow-2xl border-2 border-green-600 text-green-700 font-black text-xs uppercase tracking-[0.2em] rotate-[-12deg] flex items-center space-x-2">
-                   <CheckCircle2 size={12} />
-                   <span>Sold</span>
+             <div className="absolute inset-0 bg-black/40 flex items-center justify-center p-6 z-10">
+                <div className="bg-white px-5 py-2 rounded-full shadow-[0_10px_40px_rgba(0,0,0,0.2)] border-2 border-emerald-500 text-emerald-700 font-extrabold text-xs uppercase tracking-[0.25em] rotate-[-8deg] flex items-center space-x-2 animate-in zoom-in-50 duration-300">
+                   <CheckCircle2 size={14} className="animate-pulse" />
+                   <span>{t('product.sold')}</span>
                 </div>
              </div>
           )}
@@ -172,31 +173,29 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 e.stopPropagation();
                 setIsMapOpen(true);
               }}
-              className="absolute top-2.5 left-2.5 bg-white/90 backdrop-blur-md px-2.5 py-1.5 rounded-full text-[10px] sm:text-xs font-bold text-gray-800 shadow-sm flex items-center space-x-1 hover:bg-primary-50 transition-colors active:scale-95 group/pin z-10"
+              className="absolute top-3 left-3 bg-white px-3 py-2 rounded-full text-[10px] sm:text-xs font-bold text-gray-800 shadow-xl flex items-center space-x-1.5 hover:bg-gray-50 hover:scale-105 transition-all active:scale-95 group/pin z-10 border border-gray-100"
             >
-              <MapPin size={11} className="text-primary-600" />
+              <MapPin size={12} className="text-emerald-600" />
               <span>{formatDistance(distance)} {t('product.away')}</span>
             </button>
           )}
 
           {/* listing type badge */}
-          {!isOwner && (
-            <div 
-              className={`absolute bottom-2.5 right-2.5 px-2.5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center space-x-1.5 border backdrop-blur-sm ${getBadgeStyles(product.listingType)}`}
-            >
-              {getBadgeIcon(product.listingType)}
-              <span>{product.listingType === 'free' ? t('product.free') : product.listingType}</span>
-            </div>
-          )}
+          <div 
+            className={`absolute bottom-3 right-3 px-3 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center space-x-2 border shadow-lg ${getBadgeStyles(product.listingType)}`}
+          >
+            {getBadgeIcon(product.listingType)}
+            <span>{t(`filters.types.${product.listingType}`)}</span>
+          </div>
         </div>
 
         {/* Content Section */}
-        <div className="p-4 sm:p-5 flex flex-col flex-1 space-y-3">
-          <div className="flex justify-between items-start">
-            <h3 className="text-base sm:text-lg font-bold text-primary-900 group-hover:text-primary-600 transition-colors line-clamp-1 leading-tight">
+        <div className="p-5 flex flex-col flex-1 space-y-4">
+          <div className="flex justify-between items-start gap-2">
+            <h3 className="text-lg font-black text-gray-900 group-hover:text-emerald-600 transition-colors line-clamp-1 leading-tight tracking-tight">
               {product.name}
             </h3>
-            <span className="text-[9px] bg-primary-50 text-primary-600 font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider">
+            <span className="text-[10px] bg-emerald-50 text-emerald-700 font-extrabold px-2 py-1 rounded-lg uppercase tracking-widest border border-emerald-100 flex-shrink-0">
               {product.category}
             </span>
           </div>
@@ -205,44 +204,56 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             {product.description}
           </p>
 
-          <div className="pt-2 mt-auto border-t border-gray-50 flex justify-between items-center text-[10px] text-gray-400 font-medium">
+          <div className="pt-3 mt-auto border-t border-gray-50 flex justify-between items-center text-[10px] text-gray-400 font-bold uppercase tracking-widest">
             <Link 
               to={`/seller/${product.sellerId}`}
               onClick={(e) => e.stopPropagation()}
-              className="flex items-center space-x-1.5 overflow-hidden hover:text-primary-600 transition-colors"
+              className="flex items-center space-x-2 overflow-hidden hover:text-emerald-600 transition-colors"
             >
-              <div className="w-4 h-4 bg-primary-100 rounded-full flex-shrink-0" />
-              <span className="truncate max-w-[60px] sm:max-w-[80px]">{product.sellerName}</span>
+              <div className="w-5 h-5 bg-emerald-50 rounded-lg flex items-center justify-center text-emerald-600 flex-shrink-0">
+                 <Calendar size={10} />
+              </div>
+              <span className="truncate max-w-[80px]">{product.sellerName}</span>
             </Link>
-            <div className="flex items-center space-x-1">
-              <Calendar size={11} />
+            <div className="flex items-center space-x-1.5">
+              <Calendar size={11} className="text-gray-300" />
               <span>{new Date(product.createdAt).toLocaleDateString()}</span>
             </div>
           </div>
 
-          <div className="pt-2 flex items-center justify-between">
+          <div className="pt-2 flex items-center justify-between gap-4">
             {product.listingType === 'sell' ? (
-              <div className="text-lg sm:text-xl font-bold text-primary-700">
-                Rs. {product.price}
-                <span className="text-[10px] sm:text-xs text-gray-400 font-medium ml-1">/ {product.unit}</span>
+              <div className="flex flex-col">
+                <div className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-0.5 ml-0.5">
+                   {t('product.quantity')}: <span className="text-gray-600">{product.quantity} {product.unit}</span>
+                </div>
+                <div className="text-2xl font-black text-gray-900 flex items-baseline">
+                  <span className="text-sm font-bold text-emerald-600 mr-1">Rs.</span>
+                  {product.price}
+                  <span className="text-xs text-gray-400 font-bold ml-1 uppercase tracking-tighter">
+                     / {product.unit}
+                  </span>
+                </div>
               </div>
             ) : product.listingType === 'exchange' ? (
-              <div className="text-xs sm:text-sm font-bold text-blue-600 italic">
-                 {product.exchangePreference}
+              <div className="flex items-center space-x-2 text-xs font-black text-indigo-600 uppercase tracking-tight bg-indigo-50 px-3 py-2 rounded-xl border border-indigo-100">
+                 <Repeat size={14} />
+                 <span>{product.exchangePreference}</span>
               </div>
             ) : (
-              <div className="text-base sm:text-lg font-black text-green-600 uppercase tracking-tighter">
-                {t('product.free')}
+              <div className="text-lg font-black text-emerald-600 uppercase tracking-widest flex items-center space-x-2">
+                 <Gift size={20} />
+                 <span>{t('product.free')}</span>
               </div>
             )}
 
             <a 
               href={`tel:${product.contactNumbers?.[0] || (product as any).contactNumber || ''}`}
               onClick={(e) => e.stopPropagation()}
-              className="p-2.5 bg-primary-50 text-primary-600 rounded-xl hover:bg-primary-600 hover:text-white transition-all shadow-sm active:scale-95"
-              title="Call Seller"
+              className="p-3.5 bg-emerald-600 text-white rounded-2xl shadow-lg shadow-emerald-200 hover:bg-emerald-700 hover:scale-110 active:scale-95 transition-all duration-300"
+              title={t('product.callSeller')}
             >
-              <Phone size={18} />
+              <Phone size={20} />
             </a>
           </div>
         </div>

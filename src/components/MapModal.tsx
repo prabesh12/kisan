@@ -5,6 +5,7 @@ import L from 'leaflet';
 import 'leaflet-routing-machine';
 import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
 import { X, MapPin } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 // Fix for default Leaflet icon issue
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -75,6 +76,7 @@ const RoutingMachine = ({ buyerLat, buyerLng, sellerLat, sellerLng }: { buyerLat
 };
 
 const MapModal: React.FC<MapModalProps> = ({ isOpen, onClose, lat, lng, title, locationName, buyerLat, buyerLng }) => {
+  const { t } = useTranslation();
   if (!isOpen) return null;
 
   const modalContent = (
@@ -113,14 +115,14 @@ const MapModal: React.FC<MapModalProps> = ({ isOpen, onClose, lat, lng, title, l
             />
             <Marker position={[lat, lng]}>
               <Popup className="font-bold font-sans">
-                {title} (Seller)
+                {title} ({t('product.seller') || 'Seller'})
               </Popup>
             </Marker>
             
             {buyerLat && buyerLng && (
               <Marker position={[buyerLat, buyerLng]}>
                 <Popup className="font-bold font-sans">
-                  Your Location
+                  {t('product.yourLocation')}
                 </Popup>
               </Marker>
             )}
@@ -148,13 +150,13 @@ const MapModal: React.FC<MapModalProps> = ({ isOpen, onClose, lat, lng, title, l
             className="flex items-center justify-center space-x-3 bg-primary-600 text-white font-black px-8 py-4 rounded-2xl shadow-xl shadow-primary-200 hover:bg-primary-700 transition-all active:scale-95 flex-1 text-lg"
           >
             <MapPin size={20} />
-            <span>Navigate in Google Maps</span>
+            <span>{t('product.navigateMaps')}</span>
           </a>
           <button 
             onClick={onClose}
             className="bg-gray-100 text-gray-700 font-bold px-10 py-4 rounded-2xl hover:bg-gray-200 transition-all active:scale-95"
           >
-            Close
+            {t('product.close')}
           </button>
         </div>
       </div>
