@@ -6,18 +6,30 @@ import { login } from '../features/auth/authSlice';
 import { findUserByPhone, saveUser } from '../utils/storage';
 import { v4 as uuidv4 } from 'uuid';
 import { useTranslation } from 'react-i18next';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 
+
+const loginSchema = z.object({
+  phoneNumber: z.string().regex(/^9\d{9}$/, "Phone number must be 10 digits starting with 9"),
+});
+
+type LoginFormData = z.infer<typeof loginSchema>;
 
 const LoginSignup: React.FC = () => {
-  const [phoneNumber, setPhoneNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { t } = useTranslation();
 
+  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema)
+  });
 
-  const handleAuthFlow = (type: string) => {
+  const onSubmit = (data: LoginFormData) => {
     setIsLoading(true);
+    const { phoneNumber } = data;
     
     // Simulate network delay
     setTimeout(() => {
@@ -44,6 +56,17 @@ const LoginSignup: React.FC = () => {
     }, 1200);
   };
 
+  const handleSocialAuth = (type: string) => {
+    console.log(`Authenticating with ${type}`);
+    // Social auth would typically redirect or open a popup
+    // For this prototype, we'll just show the loading state
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+      alert(`${type} authentication is not implemented in this demo.`);
+    }, 800);
+  };
+
 
   return (
     <div className="max-w-md mx-auto py-12 px-6 bg-white rounded-3xl shadow-xl mt-12 border border-gray-100">
@@ -52,11 +75,10 @@ const LoginSignup: React.FC = () => {
         <p className="text-gray-500 font-medium leading-relaxed">{t('auth.subtitle')}</p>
       </div>
 
-
-      <div className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {/* Phone Login */}
         <div className="space-y-2">
-          <label htmlFor="phone" className="block text-sm font-bold text-gray-700 ml-1 uppercase tracking-wider">
+          <label htmlFor="phoneNumber" className="block text-sm font-bold text-gray-700 ml-1 uppercase tracking-wider">
             {t('auth.phoneLabel')}
           </label>
 
@@ -66,19 +88,24 @@ const LoginSignup: React.FC = () => {
             </div>
             <input
               type="tel"
-              id="phone"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
+              id="phoneNumber"
+              {...register('phoneNumber')}
               placeholder="984XXXXXXX"
-              className="block w-full pl-11 pr-4 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl text-gray-900 focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all placeholder:text-gray-400 font-medium"
+              className={`block w-full pl-11 pr-4 py-4 bg-gray-50 border-2 rounded-2xl text-gray-900 focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all placeholder:text-gray-400 font-medium ${
+                errors.phoneNumber ? 'border-red-500 bg-red-50' : 'border-gray-100'
+              }`}
             />
           </div>
+          {errors.phoneNumber && (
+            <p className="text-red-500 text-xs font-bold ml-1 animate-in fade-in slide-in-from-top-1">
+              {errors.phoneNumber.message}
+            </p>
+          )}
         </div>
 
         <button
-          onClick={() => handleAuthFlow('phone')}
-
-          disabled={isLoading || phoneNumber.length < 10}
+          type="submit"
+          disabled={isLoading}
           className="w-full bg-primary-600 text-white font-bold py-4 rounded-2xl hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg transition-all flex items-center justify-center space-x-2 text-lg active:scale-[0.98]"
         >
           {isLoading ? (
@@ -90,42 +117,40 @@ const LoginSignup: React.FC = () => {
             </>
           )}
         </button>
+      </form>
 
-
-        <div className="relative py-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-200"></div>
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-4 bg-white text-gray-500 font-bold uppercase tracking-widest">{t('auth.orContinue')}</span>
-          </div>
+      <div className="relative py-6">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-gray-200"></div>
         </div>
-
-
-        <div className="grid grid-cols-2 gap-4">
-          <button
-            onClick={() => handleAuthFlow('google')}
-            className="flex items-center justify-center space-x-2 border-2 border-gray-100 p-4 rounded-2xl font-bold text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-[0.95]"
-          >
-            <Globe size={20} />
-            <span>Google</span>
-          </button>
-
-          <button
-            onClick={() => handleAuthFlow('github')}
-            className="flex items-center justify-center space-x-2 border-2 border-gray-100 p-4 rounded-2xl font-bold text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-[0.95]"
-          >
-            <User size={20} />
-            <span>GitHub</span>
-          </button>
+        <div className="relative flex justify-center text-sm">
+          <span className="px-4 bg-white text-gray-500 font-bold uppercase tracking-widest">{t('auth.orContinue')}</span>
         </div>
       </div>
 
+      <div className="grid grid-cols-2 gap-4">
+        <button
+          type="button"
+          onClick={() => handleSocialAuth('google')}
+          className="flex items-center justify-center space-x-2 border-2 border-gray-100 p-4 rounded-2xl font-bold text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-[0.95]"
+        >
+          <Globe size={20} />
+          <span>Google</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleSocialAuth('github')}
+          className="flex items-center justify-center space-x-2 border-2 border-gray-100 p-4 rounded-2xl font-bold text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-[0.95]"
+        >
+          <User size={20} />
+          <span>GitHub</span>
+        </button>
+      </div>
 
       <p className="mt-8 text-center text-sm text-gray-500 font-medium italic">
         {t('auth.terms')} <span className="underline cursor-pointer">{t('auth.termsLink')}</span>.
       </p>
-
     </div>
   );
 };

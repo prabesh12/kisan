@@ -166,14 +166,19 @@ const ProductDetails: React.FC = () => {
              )}
           </div>
 
-          <div className="flex-shrink-0">
-             <a 
-               href={`tel:${product.contactNumber}`}
-               className="bg-primary-600 text-white px-8 py-5 rounded-[2rem] font-bold hover:bg-primary-700 transition-all shadow-2xl shadow-primary-200 flex items-center justify-center space-x-3 active:scale-95 group"
-             >
-                <Phone size={24} className="group-hover:rotate-12 transition-transform" />
-                <span className="text-xl">Call Seller</span>
-             </a>
+          <div className="flex-shrink-0 flex flex-col gap-3">
+             {(product.contactNumbers || [(product as any).contactNumber || '']).map((num, idx) => (
+                <a 
+                  key={idx}
+                  href={`tel:${num}`}
+                  className={`px-8 py-4 rounded-2xl font-bold transition-all shadow-xl flex items-center justify-center space-x-3 active:scale-95 group ${
+                    idx === 0 ? 'bg-primary-600 text-white hover:bg-primary-700 shadow-primary-200' : 'bg-white border-2 border-primary-100 text-primary-600 hover:bg-primary-50'
+                  }`}
+                >
+                   <Phone size={20} className="group-hover:rotate-12 transition-transform" />
+                   <span className="text-lg">{idx === 0 ? t('product.callSeller') : `${t('product.callSeller')} 2`}</span>
+                </a>
+             ))}
           </div>
         </div>
 
@@ -246,7 +251,17 @@ const ProductDetails: React.FC = () => {
              </p>
            )}
 
-           <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-3">
+              {(product.contactNumbers || [(product as any).contactNumber || '']).map((num, idx) => (
+                <a 
+                  key={idx}
+                  href={`tel:${num}`}
+                  className="flex items-center justify-center space-x-2 py-4 bg-primary-50 hover:bg-primary-100 text-primary-700 font-bold rounded-2xl transition-all active:scale-95"
+                >
+                   <Phone size={20} />
+                   <span>{t('auth.phoneLabel')} {idx > 0 ? idx + 1 : ''}</span>
+                </a>
+              ))}
               <button 
                 onClick={() => setIsMapModalOpen(true)}
                 className="flex items-center justify-center space-x-2 py-4 bg-gray-50 hover:bg-gray-100 text-gray-700 font-bold rounded-2xl transition-all active:scale-95"
@@ -254,14 +269,7 @@ const ProductDetails: React.FC = () => {
                  <MapPin size={20} className="text-primary-500" />
                  <span>{t('product.viewMap')}</span>
               </button>
-              <a 
-                href={`tel:${product.contactNumber}`}
-                className="flex items-center justify-center space-x-2 py-4 bg-primary-50 hover:bg-primary-100 text-primary-700 font-bold rounded-2xl transition-all active:scale-95"
-              >
-                 <Phone size={20} />
-                 <span>{t('auth.phoneLabel')}</span>
-              </a>
-           </div>
+            </div>
         </div>
 
       </div>
@@ -276,7 +284,7 @@ const ProductDetails: React.FC = () => {
                </div>
             </div>
             <a 
-               href={`tel:${product.contactNumber}`}
+               href={`tel:${product.contactNumbers?.[0] || (product as any).contactNumber || ''}`}
                className="bg-primary-600 text-white px-8 py-4 rounded-2xl font-bold flex items-center justify-center space-x-2 shadow-xl active:scale-95 transition-all flex-[2]"
             >
                <Phone size={20} />

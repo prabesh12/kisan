@@ -140,7 +140,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           )}
 
           <a 
-            href={`tel:${product.contactNumber}`}
+            href={`tel:${product.contactNumbers?.[0] || (product as any).contactNumber || ''}`}
             onClick={(e) => e.stopPropagation()}
             className="p-2.5 bg-primary-50 text-primary-600 rounded-xl hover:bg-primary-600 hover:text-white transition-all shadow-sm active:scale-95"
             title="Call Seller"

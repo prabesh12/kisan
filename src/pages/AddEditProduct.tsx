@@ -10,6 +10,47 @@ import { useTranslation } from 'react-i18next';
 import MapPicker from '../components/MapPicker';
 import { useRef } from 'react';
 import { savePersistentProduct, deletePersistentProduct } from '../utils/storage';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+
+const phoneRegex = /^9\d{9}$/;
+
+const productSchema = z.object({
+  name: z.string().min(3, "Product name must be at least 3 characters"),
+  category: z.enum(['vegetables', 'fruits', 'meat', 'dairy', 'grains', 'other'] as const),
+  quantity: z.number().positive("Quantity must be greater than zero"),
+  unit: z.string().min(1, "Unit is required"),
+  listingType: z.enum(['sell', 'exchange', 'free'] as const),
+  price: z.number().optional(),
+  exchangePreference: z.string().optional(),
+  description: z.string().min(10, "Description should be at least 10 characters"),
+  contactNumbers: z.array(z.string().regex(phoneRegex, "Must be 10 digits starting with 9")).min(2, "At least two contact numbers are required"),
+  city: z.string().min(1, "City is required"),
+  coordinates: z.object({
+    lat: z.number(),
+    lng: z.number(),
+  }),
+  photos: z.array(z.string()).optional(),
+}).refine((data) => {
+  if (data.listingType === 'sell' && (!data.price || data.price <= 0)) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Price is required for selling items",
+  path: ["price"]
+}).refine((data) => {
+  if (data.listingType === 'exchange' && (!data.exchangePreference || data.exchangePreference.length < 3)) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Exchange preference is required",
+  path: ["exchangePreference"]
+});
+
+type ProductFormData = z.infer<typeof productSchema>;
 
 
 
@@ -24,38 +65,36 @@ const AddEditProduct: React.FC = () => {
   const { t, i18n } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-
-
-
   const isEditMode = !!id;
   const existingProduct = items.find((p) => p.id === id);
 
-  const [formData, setFormData] = useState({
-    name: '',
-    category: 'vegetables' as Category,
-    quantity: 1,
-    unit: 'kg',
-    listingType: 'sell' as ListingType,
-    price: 0,
-    exchangePreference: '',
-    description: '',
-    photos: [] as string[],
-    city: '',
-    coordinates: {
-      lat: 27.7172,
-      lng: 85.3240,
-    },
-    contactNumber: '',
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [serverError, setServerError] = useState<string | null>(null);
+
+  const { register, handleSubmit, control, watch, setValue, reset, formState: { errors } } = useForm<ProductFormData>({
+    resolver: zodResolver(productSchema),
+    defaultValues: {
+      name: '',
+      category: 'vegetables',
+      quantity: 1,
+      unit: 'kg',
+      listingType: 'sell',
+      price: 0,
+      exchangePreference: '',
+      description: '',
+      contactNumbers: ['', ''],
+      city: '',
+      coordinates: { lat: 27.7172, lng: 85.3240 },
+      photos: [],
+    }
   });
 
-
-
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const listingType = watch('listingType');
 
   useEffect(() => {
     if (isEditMode && existingProduct) {
-      setFormData({
+      const data = {
         name: existingProduct.name,
         category: existingProduct.category,
         quantity: existingProduct.quantity,
@@ -64,21 +103,21 @@ const AddEditProduct: React.FC = () => {
         price: existingProduct.price || 0,
         exchangePreference: existingProduct.exchangePreference || '',
         description: existingProduct.description,
-        photos: existingProduct.photos,
         city: existingProduct.location.city,
         coordinates: existingProduct.location.coordinates,
-        contactNumber: existingProduct.contactNumber || '',
-      });
-
+        contactNumbers: (existingProduct.contactNumbers.length >= 2 
+          ? existingProduct.contactNumbers.slice(0, 2) 
+          : [existingProduct.contactNumbers[0] || '', '']) as [string, string],
+        photos: existingProduct.photos,
+      };
+      reset(data);
+      setPhotos(existingProduct.photos);
     } else if (user) {
-      setFormData((prev) => ({ 
-        ...prev, 
-        city: user.location.city,
-        coordinates: user.location.coordinates,
-        contactNumber: user.phone
-      }));
+      setValue('city', user.location.city);
+      setValue('coordinates', user.location.coordinates);
+      setValue('contactNumbers.0', user.phone);
     }
-  }, [isEditMode, existingProduct, user]);
+  }, [isEditMode, existingProduct, user, reset, setValue]);
 
 
 
@@ -94,35 +133,34 @@ const AddEditProduct: React.FC = () => {
   }
 
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
+  const onSubmit = (data: ProductFormData) => {
+    setServerError(null);
     setIsSubmitting(true);
 
     try {
       // 1. Content Moderation Check
-      validateContent(formData.name, formData.description);
+      validateContent(data.name, data.description);
 
       // 2. Construct Product Object
       const productData: Product = {
         id: isEditMode ? id! : uuidv4(),
-        sellerId: user.id,
-        sellerName: user.name,
-        name: formData.name,
-        category: formData.category,
-        photos: formData.photos.length > 0 ? formData.photos : ['https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=400'],
-        quantity: formData.quantity,
-        unit: formData.unit,
-        listingType: formData.listingType,
-        price: formData.listingType === 'sell' ? formData.price : undefined,
-        exchangePreference: formData.listingType === 'exchange' ? formData.exchangePreference : undefined,
-        description: formData.description,
+        sellerId: user!.id,
+        sellerName: user!.name,
+        name: data.name,
+        category: data.category,
+        photos: photos.length > 0 ? photos : ['https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=400'],
+        quantity: data.quantity,
+        unit: data.unit,
+        listingType: data.listingType,
+        price: data.listingType === 'sell' ? data.price : undefined,
+        exchangePreference: data.listingType === 'exchange' ? data.exchangePreference : undefined,
+        description: data.description,
         location: {
-          city: formData.city,
-          coordinates: formData.coordinates,
+          city: data.city,
+          coordinates: data.coordinates,
         },
-        contactNumber: formData.contactNumber,
-        tags: formData.description.match(/#(\w+)/g)?.map(tag => tag.slice(1).toLowerCase()) || [],
+        contactNumbers: data.contactNumbers,
+        tags: data.description.match(/#(\w+)/g)?.map(tag => tag.slice(1).toLowerCase()) || [],
         createdAt: isEditMode && existingProduct ? existingProduct.createdAt : new Date().toISOString(),
         status: (isEditMode && existingProduct ? existingProduct.status : 'active') as 'active' | 'sold',
         views: isEditMode && existingProduct ? existingProduct.views : 0,
@@ -136,11 +174,10 @@ const AddEditProduct: React.FC = () => {
       }
       savePersistentProduct(productData);
 
-
       // 4. Redirect
       navigate('/home');
     } catch (err: any) {
-      setError(err.message);
+      setServerError(err.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -159,7 +196,7 @@ const AddEditProduct: React.FC = () => {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setFormData({ ...formData, photos: [reader.result as string] });
+        setPhotos([reader.result as string]);
       };
       reader.readAsDataURL(file);
     }
@@ -185,11 +222,21 @@ const AddEditProduct: React.FC = () => {
         )}
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-8 bg-white p-8 rounded-3xl shadow-xl border border-gray-100">
-        {error && (
-          <div className="bg-red-50 border-2 border-red-100 text-red-600 p-4 rounded-2xl flex items-start space-x-3 text-sm font-bold uppercase tracking-wide">
-            <AlertCircle size={20} className="flex-shrink-0" />
-            <span>{error}</span>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 bg-white p-8 rounded-3xl shadow-xl border border-gray-100">
+        {(serverError || Object.keys(errors).length > 0) && (
+          <div className="bg-red-50 border-2 border-red-100 text-red-600 p-4 rounded-2xl flex flex-col space-y-2">
+            {serverError && (
+              <div className="flex items-start space-x-3 text-sm font-bold uppercase tracking-wide">
+                <AlertCircle size={20} className="flex-shrink-0" />
+                <span>{serverError}</span>
+              </div>
+            )}
+            {Object.entries(errors).map(([key, error]) => (
+              <div key={key} className="flex items-start space-x-3 text-xs font-bold text-red-500">
+                <AlertCircle size={16} className="flex-shrink-0" />
+                <span>{(error as any).message}</span>
+              </div>
+            ))}
           </div>
         )}
 
@@ -208,9 +255,9 @@ const AddEditProduct: React.FC = () => {
               onClick={() => fileInputRef.current?.click()}
               className="aspect-video bg-gray-50 border-4 border-dashed border-gray-100 rounded-3xl flex flex-col items-center justify-center text-gray-400 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-500 transition-all cursor-pointer group overflow-hidden relative"
             >
-              {formData.photos.length > 0 ? (
+              {photos.length > 0 ? (
                 <>
-                  <img src={formData.photos[0]} alt="Preview" className="w-full h-full object-cover" />
+                  <img src={photos[0]} alt="Preview" className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white font-bold">
                     {t('product.uploadPhoto')}
                   </div>
@@ -218,7 +265,7 @@ const AddEditProduct: React.FC = () => {
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setFormData({ ...formData, photos: [] });
+                      setPhotos([]);
                     }}
                     className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-xl shadow-lg hover:bg-red-600 transition-colors"
                   >
@@ -239,20 +286,18 @@ const AddEditProduct: React.FC = () => {
             <label className="block text-sm font-bold text-gray-700 ml-1 mb-2 uppercase tracking-widest">{t('product.name') || 'Product Name'}</label>
             <input
               type="text"
-              required
               placeholder={t('landing.features.marketplaceDesc')}
-              value={formData.name}
-
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl shadow-sm focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all placeholder:text-gray-400 font-bold"
+              {...register('name')}
+              className={`w-full px-5 py-4 bg-gray-50 border-2 rounded-2xl shadow-sm focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all placeholder:text-gray-400 font-bold ${
+                errors.name ? 'border-red-500' : 'border-gray-100'
+              }`}
             />
           </div>
 
           <div>
             <label className="block text-sm font-bold text-gray-700 ml-1 mb-2 uppercase tracking-widest">Category</label>
             <select
-              value={formData.category}
-              onChange={(e) => setFormData({ ...formData, category: e.target.value as Category })}
+              {...register('category')}
               className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl shadow-sm focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all font-bold"
             >
               <option value="vegetables">{t('filters.categories.vegetables')}</option>
@@ -271,12 +316,12 @@ const AddEditProduct: React.FC = () => {
 
               <input
                 type="number"
-                min="0.1"
+                min="0"
                 step="0.1"
-                required
-                value={formData.quantity}
-                onChange={(e) => setFormData({ ...formData, quantity: Number(e.target.value) })}
-                className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl shadow-sm focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all font-bold"
+                {...register('quantity', { valueAsNumber: true })}
+                className={`w-full px-5 py-4 bg-gray-50 border-2 rounded-2xl shadow-sm focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all font-bold ${
+                  errors.quantity ? 'border-red-500' : 'border-gray-100'
+                }`}
               />
             </div>
             <div>
@@ -284,11 +329,11 @@ const AddEditProduct: React.FC = () => {
 
               <input
                 type="text"
-                required
                 placeholder="kg, lit..."
-                value={formData.unit}
-                onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl shadow-sm focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all font-bold"
+                {...register('unit')}
+                className={`w-full px-5 py-4 bg-gray-50 border-2 rounded-2xl shadow-sm focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all font-bold ${
+                  errors.unit ? 'border-red-500' : 'border-gray-100'
+                }`}
               />
             </div>
           </div>
@@ -296,13 +341,13 @@ const AddEditProduct: React.FC = () => {
           <div className="md:col-span-2">
             <label className="block text-sm font-bold text-gray-700 ml-1 mb-2 uppercase tracking-widest">{t('product.listingType')}</label>
             <div className="grid grid-cols-3 gap-3">
-              {(['sell', 'exchange', 'free'] as ListingType[]).map((type) => (
+              {(['sell', 'exchange', 'free'] as const).map((type) => (
                 <button
                   key={type}
                   type="button"
-                  onClick={() => setFormData({ ...formData, listingType: type })}
+                  onClick={() => setValue('listingType', type)}
                   className={`py-4 rounded-2xl font-bold uppercase tracking-wider transition-all border-2 ${
-                    formData.listingType === type 
+                    listingType === type 
                       ? 'bg-primary-600 border-primary-600 text-white shadow-lg' 
                       : 'bg-white border-gray-100 text-gray-500 hover:border-primary-200'
                   }`}
@@ -314,31 +359,31 @@ const AddEditProduct: React.FC = () => {
           </div>
 
 
-          {formData.listingType === 'sell' && (
+          {listingType === 'sell' && (
             <div className="md:col-span-2 animate-in slide-in-from-top-2">
               <label className="block text-sm font-bold text-gray-700 ml-1 mb-2 uppercase tracking-widest">{t('product.price')}</label>
 
               <input
                 type="number"
-                required
-                value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
-                className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl shadow-sm focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all font-bold"
+                {...register('price', { valueAsNumber: true })}
+                className={`w-full px-5 py-4 bg-gray-50 border-2 rounded-2xl shadow-sm focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all font-bold ${
+                  errors.price ? 'border-red-500' : 'border-gray-100'
+                }`}
               />
             </div>
           )}
 
-          {formData.listingType === 'exchange' && (
+          {listingType === 'exchange' && (
             <div className="md:col-span-2 animate-in slide-in-from-top-2">
               <label className="block text-sm font-bold text-gray-700 ml-1 mb-2 uppercase tracking-widest">{t('product.exchange')}</label>
 
               <input
                 type="text"
-                required
                 placeholder="What do you want in return? (e.g. Rice, Potatoes)"
-                value={formData.exchangePreference}
-                onChange={(e) => setFormData({ ...formData, exchangePreference: e.target.value })}
-                className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl shadow-sm focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all font-bold"
+                {...register('exchangePreference')}
+                className={`w-full px-5 py-4 bg-gray-50 border-2 rounded-2xl shadow-sm focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all font-bold ${
+                  errors.exchangePreference ? 'border-red-500' : 'border-gray-100'
+                }`}
               />
             </div>
           )}
@@ -346,29 +391,41 @@ const AddEditProduct: React.FC = () => {
           <div className="md:col-span-2">
             <label className="block text-sm font-bold text-gray-700 ml-1 mb-2 uppercase tracking-widest">{t('product.description')}</label>
             <textarea
-              required
               rows={4}
               placeholder={`${t('landing.subtitle')} #organic #fresh #kathmandu`}
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl shadow-sm focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all placeholder:text-gray-400 font-bold resize-none"
+              {...register('description')}
+              className={`w-full px-5 py-4 bg-gray-50 border-2 rounded-2xl shadow-sm focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all placeholder:text-gray-400 font-bold resize-none ${
+                errors.description ? 'border-red-500' : 'border-gray-100'
+              }`}
             />
           </div>
 
           <div className="md:col-span-2 border-t border-gray-50 pt-8">
-            <label className="block text-sm font-bold text-gray-700 ml-1 mb-2 uppercase tracking-widest">
-              {t('auth.phoneLabel')}
+            <label className="block text-sm font-bold text-gray-700 ml-1 mb-4 uppercase tracking-widest">
+              Contact Detail 1 (Primary)
             </label>
             <input
               type="tel"
-              required
               placeholder="98XXXXXXXX"
-              value={formData.contactNumber}
-              onChange={(e) => setFormData({ ...formData, contactNumber: e.target.value })}
-              className="w-full px-5 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl shadow-sm focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all placeholder:text-gray-400 font-bold"
+              {...register('contactNumbers.0')}
+              className={`w-full px-5 py-4 bg-gray-50 border-2 rounded-2xl shadow-sm focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all placeholder:text-gray-400 font-bold mb-4 ${
+                errors.contactNumbers?.[0] ? 'border-red-500' : 'border-gray-100'
+              }`}
+            />
+            
+            <label className="block text-sm font-bold text-gray-700 ml-1 mb-4 uppercase tracking-widest">
+              Contact Detail 2 (Secondary)
+            </label>
+            <input
+              type="tel"
+              placeholder="98XXXXXXXX"
+              {...register('contactNumbers.1')}
+              className={`w-full px-5 py-4 bg-gray-50 border-2 rounded-2xl shadow-sm focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all placeholder:text-gray-400 font-bold ${
+                errors.contactNumbers?.[1] ? 'border-red-500' : 'border-gray-100'
+              }`}
             />
              <p className="mt-2 text-[10px] sm:text-xs text-gray-400 font-medium px-1">
-                {i18n.language === 'en' ? 'Buyers will use this number to contact you directly.' : 'खरीदकर्ताहरूले तपाईंलाई सिधै सम्पर्क गर्न यो नम्बर प्रयोग गर्नेछन्।'}
+                {i18n.language === 'en' ? 'Buyers will use these numbers to contact you directly. Both must be 10 digits starting with 9.' : 'खरीदकर्ताहरूले तपाईंलाई सिधै सम्पर्क गर्न यी नम्बरहरू प्रयोग गर्नेछन्। दुबै ९ बाट सुरु हुने १० अंकको हुनुपर्छ।'}
              </p>
           </div>
 
@@ -376,9 +433,15 @@ const AddEditProduct: React.FC = () => {
 
           <div className="md:col-span-2">
             <label className="block text-sm font-bold text-gray-700 ml-1 mb-4 uppercase tracking-widest">{t('product.setLocation')}</label>
-            <MapPicker 
-              initialCenter={formData.coordinates}
-              onLocationSelect={(lat, lng) => setFormData({ ...formData, coordinates: { lat, lng } })}
+            <Controller
+              name="coordinates"
+              control={control}
+              render={({ field }) => (
+                <MapPicker 
+                  initialCenter={field.value}
+                  onLocationSelect={(lat, lng) => field.onChange({ lat, lng })}
+                />
+              )}
             />
           </div>
         </div>

@@ -27,7 +27,7 @@ export interface Product {
   createdAt: string;
   status: 'active' | 'sold';
   views: number;
-  contactNumber: string;
+  contactNumbers: string[];
   tags: string[];
 }
 
@@ -44,7 +44,20 @@ const productSlice = createSlice({
   initialState,
   reducers: {
     setProducts: (state, action: PayloadAction<Product[]>) => {
-      state.items = action.payload;
+      state.items = action.payload.map(product => {
+        // Migration: If product has contactNumber string but not contactNumbers array
+        if (!(product as any).contactNumbers && (product as any).contactNumber) {
+          return {
+            ...product,
+            contactNumbers: [(product as any).contactNumber]
+          };
+        }
+        // Ensure contactNumbers is at least an empty array to prevent crashes
+        return {
+          ...product,
+          contactNumbers: product.contactNumbers || []
+        };
+      });
     },
     addProduct: (state, action: PayloadAction<Product>) => {
       state.items.unshift({
