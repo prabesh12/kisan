@@ -30,6 +30,7 @@ const CREATE_PRODUCT_MUTATION = gql`
     $category: String!
     $listingType: String!
     $exchangePreference: String
+    $contactNumbers: [String!]!
     $photos: [String!]!
     $location: LocationInput!
   ) {
@@ -42,6 +43,7 @@ const CREATE_PRODUCT_MUTATION = gql`
       category: $category
       listingType: $listingType
       exchangePreference: $exchangePreference
+      contactNumbers: $contactNumbers
       photos: $photos
       location: $location
     ) {
@@ -59,6 +61,12 @@ const UPDATE_PRODUCT_MUTATION = gql`
     $price: Float
     $quantity: Float
     $unit: String
+    $category: String
+    $listingType: String
+    $exchangePreference: String
+    $contactNumbers: [String!]
+    $photos: [String!]
+    $location: LocationInput
     $status: String
   ) {
     updateProduct(
@@ -68,6 +76,12 @@ const UPDATE_PRODUCT_MUTATION = gql`
       price: $price
       quantity: $quantity
       unit: $unit
+      category: $category
+      listingType: $listingType
+      exchangePreference: $exchangePreference
+      contactNumbers: $contactNumbers
+      photos: $photos
+      location: $location
       status: $status
     ) {
       id
@@ -154,10 +168,12 @@ const AddEditProduct: React.FC = () => {
 
   const [createProduct] = useMutation(CREATE_PRODUCT_MUTATION, {
     refetchQueries: ['GetProducts'],
+    awaitRefetchQueries: true,
   });
 
   const [updateProductMutation] = useMutation(UPDATE_PRODUCT_MUTATION, {
     refetchQueries: ['GetProducts'],
+    awaitRefetchQueries: true,
   });
 
   const listingType = watch('listingType');
@@ -222,6 +238,15 @@ const AddEditProduct: React.FC = () => {
             price: data.price,
             quantity: data.quantity,
             unit: data.unit,
+            category: data.category,
+            listingType: data.listingType,
+            exchangePreference: data.exchangePreference,
+            contactNumbers: data.contactNumbers,
+            photos: photos.length > 0 ? photos : existingProduct!.photos,
+            location: {
+              city: data.city,
+              coordinates: data.coordinates
+            },
             status: (existingProduct as any)?.status || 'active'
           }
         });
@@ -236,6 +261,7 @@ const AddEditProduct: React.FC = () => {
             category: data.category,
             listingType: data.listingType,
             exchangePreference: data.exchangePreference,
+            contactNumbers: data.contactNumbers,
             photos: photos.length > 0 ? photos : ['https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=400'],
             location: {
               city: data.city,

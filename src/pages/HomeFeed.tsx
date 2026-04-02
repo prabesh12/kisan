@@ -61,6 +61,8 @@ const GET_PRODUCTS = gql`
         id
         name
       }
+      exchangePreference
+      contactNumbers
       status
       tags
       createdAt
@@ -81,9 +83,16 @@ const HomeFeed: React.FC = () => {
 
   const [searchParams] = useSearchParams();
 
-  const { data, loading, error } = useQuery<GetProductsData>(GET_PRODUCTS);
+  const { data, loading, error, refetch } = useQuery<GetProductsData>(GET_PRODUCTS, {
+    fetchPolicy: 'cache-and-network',
+    notifyOnNetworkStatusChange: true,
+  });
 
   const products = data?.getProducts || [];
+
+  useEffect(() => {
+    refetch()
+  }, [])
 
   useEffect(() => {
     if (data?.getProducts) {
@@ -153,7 +162,7 @@ const HomeFeed: React.FC = () => {
       }
       return 0;
     });
-  }, [products, categories, listingTypes, radius, searchQuery, sortBy, user, minPrice, maxPrice]);
+  }, [reduxProducts, categories, listingTypes, radius, searchQuery, sortBy, user, minPrice, maxPrice]);
 
   const activeFilterCount = (categories?.length || 0) + (listingTypes?.length || 0) + (radius !== 'all' ? 1 : 0) + (minPrice !== null || maxPrice !== null ? 1 : 0);
 
@@ -198,11 +207,10 @@ const HomeFeed: React.FC = () => {
 
             <button
               onClick={() => setIsFilterDrawerOpen(true)}
-              className={`lg:hidden flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border transition-all text-sm font-bold relative active:scale-95 ${
-                activeFilterCount > 0
-                  ? 'bg-primary-600 text-white border-primary-600'
-                  : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
-              }`}
+              className={`lg:hidden flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border transition-all text-sm font-bold relative active:scale-95 ${activeFilterCount > 0
+                ? 'bg-primary-600 text-white border-primary-600'
+                : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+                }`}
             >
               <Filter size={15} />
               <span className="hidden xs:inline">{t('filters.title')}</span>
