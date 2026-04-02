@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, Phone, Gift, Repeat, ShoppingCart } from 'lucide-react';
+import { MapPin, Phone, Gift, Repeat, ShoppingCart, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -39,8 +39,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         return {
           label: t('filters.types.sell') === 'Sell' ? 'For Sale' : t('filters.types.sell'),
           icon: ShoppingCart,
-          bgColor: 'bg-emerald-100',
-          textColor: 'text-emerald-700',
+          bgColor: 'bg-amber-100',
+          textColor: 'text-amber-700',
         };
     }
   };
@@ -83,7 +83,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       onClick={() => navigate(`/product/${product.id}`)}
     >
       {/* Image Container */}
-      <div className="relative overflow-hidden aspect-square bg-gray-100">
+      <div className="relative overflow-hidden aspect-[4/3] bg-gray-100">
         <img
           src={product.photos[0] || 'https://via.placeholder.com/400'}
           alt={product.name}
@@ -126,64 +126,53 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </h3>
 
         {/* Seller & Location Info */}
-        <div className="flex items-start gap-2.5">
-          <div className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white font-semibold text-sm shadow-sm">
-            {product.sellerName?.charAt(0).toUpperCase() || 'K'}
+        <div className="flex items-center gap-2">
+          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold text-xs ring-2 ring-white">
+            {product.sellerName?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'K'}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-gray-900 truncate">{product.sellerName}</p>
-            <p className="text-xs text-gray-500 line-clamp-1">{product.location.city}</p>
+            <p className="text-xs font-bold text-gray-900 truncate">{product.sellerName}</p>
+            <p className="text-[10px] text-gray-500 truncate">{product.location.city}</p>
           </div>
         </div>
 
-        {/* Divider */}
-        <div className="h-px bg-gray-100" />
-
-        {/* Quantity & Date Added */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
-              {t('product.quantity')}
-            </span>
-            <span className="text-sm font-bold text-gray-900">{product.quantity} {product.unit}</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
-              {t('product.posted')}
-            </span>
-            <span className="text-xs text-gray-600">{dateAdded}</span>
-          </div>
+        {/* Quantity */}
+        <div className="flex items-center justify-between py-1 border-y border-gray-50">
+          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+            {t('product.quantity')}
+          </span>
+          <span className="text-xs font-bold text-gray-900">{product.quantity} {product.unit}</span>
         </div>
 
-        {/* Price or Status */}
-        <div className="pt-1 h-10 flex items-center">
-          {product.listingType === 'sell' && product.price !== undefined ? (
-            <div className="flex items-baseline gap-1">
-              <span className="text-sm font-semibold text-gray-600">₹</span>
-              <span className="text-2xl font-bold text-emerald-600">{product.price}</span>
-              <span className="text-xs text-gray-500">/{product.unit}</span>
-            </div>
-          ) : product.listingType === 'free' ? (
-            <span className="text-lg font-bold text-purple-600">{t('product.free')}</span>
-          ) : (
-            <div className="flex flex-col">
-              <span className="text-[10px] font-semibold text-indigo-500 uppercase tracking-tight">{t('product.exchangeFor')}</span>
-              <span className="text-sm font-bold text-indigo-600 line-clamp-1 truncate max-w-[200px]">{product.exchangePreference || t('filters.types.exchange')}</span>
-            </div>
-          )}
-        </div>
+        {/* Price + CTA Button Side-by-Side */}
+        <div className="flex items-center justify-between pt-2 gap-3">
+          <div className="flex-shrink-0">
+            {product.listingType === 'sell' && product.price !== undefined ? (
+              <div className="flex items-baseline gap-0.5">
+                <span className="text-xs font-bold text-gray-400">Rs</span>
+                <span className="text-xl font-black text-emerald-600 leading-none">{product.price}</span>
+              </div>
+            ) : product.listingType === 'free' ? (
+              <span className="text-sm font-black text-purple-600 uppercase tracking-tight">{t('product.free')}</span>
+            ) : (
+              <div className="flex flex-col">
+                <span className="text-[10px] font-bold text-indigo-600 uppercase leading-none">{t('filters.types.exchange')}</span>
+              </div>
+            )}
+          </div>
 
-        {/* Contact Button */}
-        <button 
-          onClick={(e) => {
-            e.stopPropagation();
-            window.location.href = `tel:${product.contactNumbers?.[0] || (product as any).contactNumber || ''}`;
-          }}
-          className="w-full h-10 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-center gap-2 active:scale-95"
-        >
-          <Phone className="w-4 h-4" />
-          {t('product.callSeller')}
-        </button>
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              window.location.href = `tel:${product.contactNumbers?.[0] || (product as any).contactNumber || ''}`;
+            }}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-black transition-all group/btn"
+          >
+            <Phone className="w-3 h-3" />
+            <span>{t('product.callSeller')}</span>
+            <ChevronRight className="w-3 h-3 group-hover/btn:translate-x-0.5 transition-transform" />
+          </button>
+        </div>
       </div>
     </motion.div>
   );

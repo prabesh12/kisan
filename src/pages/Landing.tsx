@@ -30,7 +30,7 @@ const Landing: React.FC = () => {
 
             <Link
               to="/login"
-              className="bg-white border-2 border-primary-100 text-primary-700 px-8 py-4 rounded-xl text-lg font-bold hover:border-primary-300 hover:shadow-lg transition-all"
+              className="bg-white border-2 border-primary-100 text-primary-700 px-8 py-4 rounded-xl text-lg font-bold hover:border-primary-300 hover:shadow-lg transition-all duration-700"
             >
               {t('landing.joinAsFarmer')}
             </Link>
@@ -49,7 +49,7 @@ const Landing: React.FC = () => {
           </div>
 
           <div className="p-8 bg-white rounded-2xl shadow-sm border border-gray-100 text-left space-y-4">
-            <div className="bg-earth-100 w-12 h-12 flex items-center justify-center rounded-xl text-earth-700">
+            <div className="bg-primary-100 w-12 h-12 flex items-center justify-center rounded-xl text-primary-700">
               <Users size={24} />
             </div>
             <h3 className="text-xl font-bold text-primary-900 font-heading">{t('landing.features.exchange')}</h3>
@@ -57,7 +57,7 @@ const Landing: React.FC = () => {
           </div>
 
           <div className="p-8 bg-white rounded-2xl shadow-sm border border-gray-100 text-left space-y-4">
-            <div className="bg-green-100 w-12 h-12 flex items-center justify-center rounded-xl text-green-700">
+            <div className="bg-blue-100 w-12 h-12 flex items-center justify-center rounded-xl text-blue-700">
               <Sprout size={24} />
             </div>
             <h3 className="text-xl font-bold text-primary-900 font-heading">{t('landing.features.location')}</h3>

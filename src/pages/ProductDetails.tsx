@@ -37,6 +37,7 @@ const ProductDetails: React.FC = () => {
   
   const [activeImage, setActiveImage] = useState(0);
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'description' | 'reviews'>('description');
 
   useEffect(() => {
     if (id) {
@@ -100,139 +101,203 @@ const ProductDetails: React.FC = () => {
         </button>
       </div>
 
-      {/* Hero Image Section */}
-      <div className="relative aspect-[4/5] sm:aspect-video w-full overflow-hidden sm:rounded-2xl sm:mt-4">
-        <img 
-          src={product.photos[activeImage]} 
-          alt={product.name}
-          className={`w-full h-full object-cover transition-all duration-700 ${product.status === 'sold' ? 'grayscale opacity-80' : ''}`}
-        />
-        
-        {/* Sold Overlay */}
-        {product.status === 'sold' && (
-          <div className="absolute inset-0 bg-black/40 flex items-center justify-center p-12">
-             <div className="bg-white px-8 py-3 rounded-full shadow-2xl border-4 border-emerald-600 text-emerald-700 font-extrabold text-2xl uppercase tracking-[0.3em] rotate-[-12deg] flex items-center space-x-3">
-                <CheckCircle2 size={24} />
-                <span>{t('product.sold')}</span>
-             </div>
-          </div>
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-        
-        {/* Image Indicators */}
-        {product.photos.length > 1 && (
-          <div className="absolute bottom-8 left-0 right-0 flex justify-center space-x-2">
-            {product.photos.map((_, i) => (
-              <div 
-                key={i}
-                className={`h-2 rounded-full transition-all duration-300 ${i === activeImage ? 'w-8 bg-white' : 'w-2 bg-white/50'}`}
+      {/* Hero Section - Two Column on Desktop */}
+      <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 sm:mt-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:items-start">
+          
+          {/* Left: Image Gallery */}
+          <div className="lg:col-span-7 space-y-4">
+            <div className="relative aspect-[4/3] sm:rounded-3xl overflow-hidden shadow-2xl bg-gray-100 group">
+              <img 
+                src={product.photos[activeImage]} 
+                alt={product.name}
+                className={`w-full h-full object-cover transition-all duration-700 group-hover:scale-105 ${product.status === 'sold' ? 'grayscale opacity-80' : ''}`}
               />
-            ))}
-          </div>
-        )}
+              
+              {/* Sold Overlay */}
+              {product.status === 'sold' && (
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center p-12 z-20">
+                   <div className="bg-white px-8 py-3 rounded-full shadow-2xl border-4 border-emerald-600 text-emerald-700 font-extrabold text-2xl uppercase tracking-[0.3em] rotate-[-12deg] flex items-center space-x-3">
+                      <CheckCircle2 size={24} />
+                      <span>{t('product.sold')}</span>
+                   </div>
+                </div>
+              )}
 
-        {/* Floating Status Badges */}
-        <div className="absolute bottom-8 left-8 flex flex-col space-y-2">
-          <div className="flex space-x-2">
-            <span className="bg-white text-gray-900 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest border border-white/20">
-              {t(`filters.categories.${product.category}`)}
-            </span>
-            <span className="bg-emerald-600 text-white px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest border border-emerald-500">
-               {t(`filters.types.${product.listingType}`)}
-            </span>
+              {/* Navigation Arrows for Gallery */}
+              {product.photos.length > 1 && (
+                <>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setActiveImage(prev => prev === 0 ? product.photos.length - 1 : prev - 1); }}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-white/20 hover:bg-white/40 backdrop-blur-md rounded-full text-white transition-all opacity-0 group-hover:opacity-100 hidden sm:block"
+                  >
+                    <ChevronLeft size={24} />
+                  </button>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setActiveImage(prev => prev === product.photos.length - 1 ? 0 : prev + 1); }}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-white/20 hover:bg-white/40 backdrop-blur-md rounded-full text-white transition-all opacity-0 group-hover:opacity-100 hidden sm:block"
+                  >
+                    <ChevronRight size={24} />
+                  </button>
+                </>
+              )}
+
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
+              
+              {/* Image Indicators */}
+              {product.photos.length > 1 && (
+                <div className="absolute bottom-6 left-0 right-0 flex justify-center space-x-2">
+                  {product.photos.map((_, i) => (
+                    <button 
+                      key={i}
+                      onClick={() => setActiveImage(i)}
+                      className={`h-1.5 rounded-full transition-all duration-300 ${i === activeImage ? 'w-8 bg-white' : 'w-4 bg-white/40'}`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Thumbnail Strip */}
+            {product.photos.length > 1 && (
+              <div className="flex gap-4 overflow-x-auto pb-2 px-4 sm:px-0 scrollbar-hide">
+                {product.photos.map((photo, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setActiveImage(i)}
+                    className={`relative flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 transition-all ${i === activeImage ? 'border-primary-600 scale-95 shadow-lg' : 'border-transparent opacity-70 hover:opacity-100'}`}
+                  >
+                    <img src={photo} className="w-full h-full object-cover" alt="" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-          <h1 className="text-4xl font-black text-white font-heading tracking-tight drop-shadow-2xl">
-            {product.name}
-          </h1>
+
+          {/* Right: Product Info & Actions */}
+          <div className="lg:col-span-5 px-6 lg:px-0 space-y-8">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <span className="bg-primary-50 text-primary-700 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest">
+                  {t(`filters.categories.${product.category}`)}
+                </span>
+                <span className="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest">
+                  {t(`filters.types.${product.listingType}`)}
+                </span>
+              </div>
+              
+              <h1 className="text-4xl lg:text-5xl font-black text-gray-900 tracking-tight leading-tight">
+                {product.name}
+              </h1>
+
+              <div className="flex items-center gap-4 text-gray-500 font-bold text-sm">
+                <div className="flex items-center gap-1">
+                  <MapPin size={16} className="text-primary-500" />
+                  <span>{product.location.city}, {distance}km {t('product.away')}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Clock size={16} className="text-orange-500" />
+                  <span>{new Date(product.createdAt).toLocaleDateString()}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 bg-gray-50 rounded-3xl space-y-6">
+              <div className="space-y-1">
+                <div className="text-sm font-bold text-gray-400 uppercase tracking-widest">{t('product.price')}</div>
+                <div className="text-5xl font-black text-gray-900 leading-none">
+                  {product.listingType === 'sell' ? (
+                    <>
+                      <span className="text-2xl mr-1">Rs</span>{product.price}
+                      <span className="text-xl text-gray-400 font-bold ml-2">/ {product.unit}</span>
+                    </>
+                  ) : product.listingType === 'free' ? t('product.free') : t('filters.types.exchange')}
+                </div>
+                <div className="inline-flex items-center gap-1.5 mt-4 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-xl text-sm font-bold text-gray-700 border border-gray-100 shadow-sm">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  {product.quantity} {product.unit} {t('product.available')}
+                </div>
+              </div>
+
+              {product.listingType === 'exchange' && (
+                <div className="bg-white p-4 rounded-2xl border border-indigo-100 shadow-sm">
+                   <div className="text-indigo-600 font-black uppercase tracking-widest text-[10px] mb-1">{t('product.exchangeFor')}</div>
+                   <div className="text-indigo-900 font-bold text-lg">{product.exchangePreference}</div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 gap-3">
+                {(product.contactNumbers || [(product as any).contactNumber || '']).map((num, idx) => (
+                  <a 
+                    key={idx}
+                    href={`tel:${num}`}
+                    className={`w-full py-5 rounded-2xl font-black text-xl transition-all shadow-xl flex items-center justify-center gap-3 active:scale-95 group ${
+                      idx === 0 ? 'bg-primary-600 text-white hover:bg-primary-700 shadow-primary-200' : 'bg-white border-2 border-primary-100 text-primary-600 hover:bg-primary-50 shadow-none'
+                    }`}
+                  >
+                    <Phone size={24} className="group-hover:rotate-12 transition-transform" />
+                    <span>{idx === 0 ? t('product.callSeller') : `${t('product.callSeller')} 2`}</span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Content Section */}
-      <div className="px-6 sm:px-0 mt-8 max-w-4xl mx-auto space-y-10">
-        
-        {/* Header & Price */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-gray-100 pb-10">
-          <div className="space-y-4 flex-1">
-             <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-1 text-primary-600 font-bold bg-primary-50 px-3 py-1 rounded-lg text-sm">
-                   <Clock size={16} />
-                   <span>{new Date(product.createdAt).toLocaleDateString()}</span>
-                </div>
-                <div className="flex items-center space-x-1 text-gray-500 font-bold bg-gray-50 px-3 py-1 rounded-lg text-sm">
-                   <ShieldCheck size={16} className="text-green-500" />
-                   <span>{t('product.verifiedListing')}</span>
-                </div>
-             </div>
-             
-             <div className="flex flex-col">
-                <span className="text-5xl font-black text-primary-900 leading-tight">
-                  {product.listingType === 'sell' ? (
-                    <>
-                      Rs. {product.price}
-                      <span className="text-2xl text-gray-400 font-bold ml-2">/ {product.unit}</span>
-                    </>
-                  ) : product.listingType === 'free' ? t('product.free') : t('filters.types.exchange')}
-                </span>
-                <div className="inline-flex items-center space-x-1 mt-1">
-                   <span className="bg-primary-50 text-primary-600 px-3 py-1 rounded-lg text-sm font-black uppercase tracking-widest">
-                      {product.quantity} {product.unit} {t('product.available')}
-                   </span>
-                </div>
-             </div>
-             
-             {product.listingType === 'exchange' && (
-                <div className="bg-orange-50 border-2 border-orange-100 p-4 rounded-xl">
-                   <div className="text-orange-600 font-black uppercase tracking-widest text-[10px] mb-1">{t('product.exchangeFor')}</div>
-                   <div className="text-orange-900 font-bold text-lg">{product.exchangePreference}</div>
-                </div>
-             )}
-          </div>
-
-          <div className="flex-shrink-0 flex flex-col gap-3">
-             {(product.contactNumbers || [(product as any).contactNumber || '']).map((num, idx) => (
-                <a 
-                  key={idx}
-                  href={`tel:${num}`}
-                  className={`px-8 py-4 rounded-2xl font-bold transition-all shadow-xl flex items-center justify-center space-x-3 active:scale-95 group ${
-                    idx === 0 ? 'bg-primary-600 text-white hover:bg-primary-700 shadow-primary-200' : 'bg-white border-2 border-primary-100 text-primary-600 hover:bg-primary-50'
-                  }`}
-                >
-                   <Phone size={20} className="group-hover:rotate-12 transition-transform" />
-                   <span className="text-lg">{idx === 0 ? t('product.callSeller') : `${t('product.callSeller')} 2`}</span>
-                </a>
-             ))}
-          </div>
+      {/* Tabs Section */}
+      <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 mt-16">
+        <div className="border-b border-gray-100 flex gap-8 px-6 sm:px-0">
+          <button 
+            onClick={() => setActiveTab('description')}
+            className={`pb-4 text-xl font-black uppercase tracking-widest transition-all relative ${activeTab === 'description' ? 'text-primary-600' : 'text-gray-400 hover:text-gray-600'}`}
+          >
+            {t('product.description')}
+            {activeTab === 'description' && <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary-600 rounded-full" />}
+          </button>
+          <button 
+            onClick={() => setActiveTab('reviews')}
+            className={`pb-4 text-xl font-black uppercase tracking-widest transition-all relative ${activeTab === 'reviews' ? 'text-primary-600' : 'text-gray-400 hover:text-gray-600'}`}
+          >
+            Reviews
+            {activeTab === 'reviews' && <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary-600 rounded-full" />}
+          </button>
         </div>
 
-        {/* Description */}
-        <div className="space-y-4">
-           <h3 className="text-xl font-black text-primary-900 uppercase tracking-widest flex items-center space-x-2">
-              <ChevronRight size={24} className="text-primary-500" />
-              <span>{t('product.description')}</span>
-           </h3>
-           <p className="text-gray-600 text-lg leading-relaxed font-medium whitespace-pre-wrap">
-              {product.description}
-           </p>
-           
-           {/* Tags */}
-           {product.tags && product.tags.length > 0 && (
-             <div className="flex flex-wrap gap-2 pt-4">
-                {product.tags.map(tag => (
-                  <Link 
-                    key={tag}
-                    to={`/home?search=%23${tag}`}
-                    className="flex items-center space-x-1 bg-gray-50 hover:bg-primary-50 text-gray-500 hover:text-primary-600 px-4 py-2 rounded-xl transition-all border border-gray-100 font-bold"
-                  >
-                    <Tag size={16} />
-                    <span>#{tag}</span>
-                  </Link>
-                ))}
-             </div>
-           )}
+        <div className="py-10 px-6 sm:px-0">
+          {activeTab === 'description' ? (
+            <div className="max-w-4xl space-y-8">
+              <p className="text-gray-600 text-xl leading-relaxed font-medium whitespace-pre-wrap">
+                {product.description}
+              </p>
+              
+              {/* Tags */}
+              {product.tags && product.tags.length > 0 && (
+                <div className="flex flex-wrap gap-3 pt-4">
+                   {product.tags.map(tag => (
+                     <Link 
+                       key={tag}
+                       to={`/home?search=%23${tag}`}
+                       className="flex items-center gap-2 bg-gray-50 hover:bg-primary-50 text-gray-500 hover:text-primary-600 px-5 py-2.5 rounded-2xl transition-all border border-gray-100 font-bold"
+                     >
+                       <Tag size={18} />
+                       <span>#{tag}</span>
+                     </Link>
+                   ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="max-w-4xl py-12 text-center bg-gray-50 rounded-3xl border border-dashed border-gray-200">
+               <div className="text-gray-400 font-bold text-lg">No reviews yet for this product.</div>
+               <p className="text-gray-400 text-sm mt-1">Be the first to share your experience after purchasing!</p>
+            </div>
+          )}
         </div>
+      </div>
 
-        {/* Seller Profile Card */}
-        <div className="bg-white rounded-2xl border-2 border-gray-100 p-8 shadow-sm space-y-8">
+      {/* Seller Profile Card - Standard Width */}
+      <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 mt-10">
            <div className="flex items-center justify-between">
               <h3 className="font-black text-gray-900 uppercase tracking-widest text-sm">{t('profile.title')}</h3>
               <div className="flex items-center space-x-1 text-primary-600 font-black text-sm">
@@ -294,7 +359,6 @@ const ProductDetails: React.FC = () => {
             </div>
         </div>
 
-      </div>
 
       {/* Floating Bottom Bar (Mobile) */}
       <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-gray-100 p-4 pb-8 z-40 sm:hidden">

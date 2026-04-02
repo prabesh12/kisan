@@ -9,8 +9,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation } from '@apollo/client/react';
 import { gql } from '@apollo/client';
+import { Link } from 'react-router-dom';
 import PageTransition from '../components/PageTransition';
 import { toast } from 'react-hot-toast';
+import { Sprout } from 'lucide-react';
 
 const SIGNUP_MUTATION = gql`
   mutation Signup($name: String!, $email: String!, $password: String!, $phoneNumber: String!, $location: LocationInput!) {
@@ -143,9 +145,13 @@ const LoginSignup: React.FC = () => {
     <PageTransition>
       <div className="max-w-md mx-auto py-12 px-6 bg-white rounded-3xl shadow-2xl mt-12 border border-gray-100">
         <div className="text-center space-y-4 mb-10">
-          <div className="w-16 h-16 bg-primary-100 rounded-2xl flex items-center justify-center mx-auto text-primary-600 mb-4">
-            {isLogin ? <LogIn size={32} /> : <User size={32} />}
-          </div>
+          <Link to="/" className="flex items-center justify-center space-x-2 group mb-8">
+            <div className="w-12 h-12 bg-primary-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-primary-200 group-hover:scale-110 transition-transform duration-300">
+              <Sprout size={30} />
+            </div>
+            <span className="text-3xl font-black text-gray-900 tracking-tight">Kisan</span>
+          </Link>
+          
           <h2 className="text-3xl font-black font-heading text-primary-900 tracking-tight">
             {isLogin ? t('auth.welcome') : "Create Account"}
           </h2>

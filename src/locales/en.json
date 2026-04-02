@@ -4,7 +4,14 @@
     "myListings": "My Listings",
     "add": "Add",
     "profile": "Profile",
-    "login": "Login"
+    "login": "Login",
+    "exploreMarket": "Explore Market"
+  },
+  "footer": {
+    "quickLinks": "Quick Links",
+    "categories": "Categories",
+    "contact": "Contact Us",
+    "rights": "All rights reserved"
   },
   "landing": {
     "title": "Direct from Farm to Table",
