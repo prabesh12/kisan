@@ -95,14 +95,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 pb-24 md:pb-12 pt-6 px-4 w-full">
+      <main className="flex-1 pb-16 md:pb-8 pt-6 px-4 w-full">
         <div className="container-fluid mx-auto">
           {children}
         </div>
       </main>
 
       {/* Site Footer */}
-      <footer className="hidden md:block bg-white border-t border-gray-100 pt-16 pb-24 md:pb-12">
+      <footer className="hidden md:block bg-white border-t border-gray-100 pt-12 pb-12">
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="space-y-6">
             <Logo />

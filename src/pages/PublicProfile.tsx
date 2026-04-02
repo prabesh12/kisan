@@ -18,22 +18,94 @@ import { useTranslation } from 'react-i18next';
 import PageTransition from '../components/PageTransition';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
+import { useQuery } from '@apollo/client/react/index.js';
+import { gql } from '@apollo/client/core/index.js';
+
+const GET_USER = gql`
+  query GetUser($id: ID!) {
+    getUser(id: $id) {
+      id
+      name
+      farmName
+      bio
+      profilePhoto
+      location {
+        city
+      }
+      phoneNumber
+    }
+  }
+`;
+
+const GET_PRODUCTS = gql`
+  query GetProducts($sellerId: String) {
+    getProducts(sellerId: $sellerId) {
+      id
+      name
+      description
+      price
+      unit
+      quantity
+      category
+      listingType
+      photos
+      location {
+        city
+        coordinates {
+          lat
+          lng
+        }
+      }
+      seller {
+        id
+        name
+      }
+      status
+      tags
+      createdAt
+    }
+  }
+`;
+
+interface GetUserData {
+  getUser: any;
+}
+
+interface GetProductsData {
+  getProducts: any[];
+}
 
 const PublicProfile: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { items: allProducts } = useAppSelector((state) => state.products);
   const { t } = useTranslation();
 
-  const seller = useMemo(() => (id ? findUserById(id) : null), [id]);
-  
+  const { data: userData, loading: userLoading } = useQuery<GetUserData>(GET_USER, {
+    variables: { id },
+    skip: !id
+  });
+
+  const { data: productsData, loading: productsLoading } = useQuery<GetProductsData>(GET_PRODUCTS, {
+    variables: { sellerId: id },
+    skip: !id
+  });
+
+  const seller = userData?.getUser;
   const sellerProducts = useMemo(() => {
-    return allProducts.filter(p => p.sellerId === id && p.status === 'active');
-  }, [allProducts, id]);
+    return (productsData?.getProducts || []).filter((p: any) => p.status === 'active');
+  }, [productsData]);
 
   const totalViews = useMemo(() => {
-    return sellerProducts.reduce((acc, p) => acc + (p.views || 0), 0);
+    return sellerProducts.reduce((acc: number, p: any) => acc + (p.views || 0), 0);
   }, [sellerProducts]);
+
+  if (userLoading || productsLoading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-600 border-t-transparent" />
+      </div>
+    );
+  }
 
   if (!seller) {
     return (
@@ -70,7 +142,7 @@ const PublicProfile: React.FC = () => {
 
   return (
     <PageTransition>
-      <div className="pb-24">
+      <div className="space-y-12">
       {/* Premium Header */}
       <div className="relative h-64 sm:h-80 -mt-6 sm:-mt-8 -mx-4 sm:-mx-0 overflow-hidden sm:rounded-b-3xl">
         <img 
@@ -180,13 +252,13 @@ const PublicProfile: React.FC = () => {
                variants={containerVariants}
                initial="hidden"
                animate="visible"
-               className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-12"
+               className="grid grid-cols-1 sm:grid-cols-2 gap-4"
              >
-                {sellerProducts.map(product => (
-                  <motion.div variants={itemVariants} key={product.id}>
-                    <ProductCard product={product} />
-                  </motion.div>
-                ))}
+                 {sellerProducts.map((product: any) => (
+                   <motion.div variants={itemVariants} key={product.id}>
+                     <ProductCard product={product} />
+                   </motion.div>
+                 ))}
              </motion.div>
            ) : (
              <div className="py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 text-center space-y-4">

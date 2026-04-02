@@ -9,7 +9,7 @@ const Landing: React.FC = () => {
   const { t } = useTranslation();
   return (
     <PageTransition>
-      <div className="flex flex-col items-center justify-center space-y-12 pt-8 pb-12 text-center">
+      <div className="flex flex-col items-center justify-center space-y-12 pt-8 text-center">
         {/* Hero Section */}
         <div className="max-w-3xl space-y-6">
           <h1 className="text-5xl md:text-7xl font-bold font-heading text-primary-900 tracking-tight leading-tight">
