@@ -160,101 +160,152 @@ const HomeFeed: React.FC = () => {
   return (
     <PageTransition>
       <div className="flex flex-col w-full">
-        <div className="sticky top-[60px] md:top-[60px] z-30 -mt-6 -mx-4 px-4 py-6 bg-gray-50/80 backdrop-blur-xl border-b border-gray-100 sm:border-none">
-          <div className="space-y-6 text-left">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <h2 className="text-2xl font-black text-primary-900 tracking-tight font-heading">
-                {t('filters.freshIn')} <span className="text-primary-600">{t('filters.yourArea')}</span>
-              </h2>
 
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                <input
-                  type="text"
-                  placeholder={t('filters.searchPlaceholder')}
-                  value={searchQuery}
-                  onChange={(e) => dispatch(setSearchQuery(e.target.value))}
-                  className="w-full pl-10 pr-4 py-3 border-2 border-transparent bg-white rounded-xl shadow-sm focus:border-primary-500 outline-none transition-all placeholder:text-gray-400 text-sm font-medium"
-                />
-              </div>
+        {/* ── Sticky Top Bar: Title + Search + Filter ── */}
+        <div className="sticky top-[56px] md:top-[72px] z-30 -mt-6 -mx-4 bg-white/95 backdrop-blur-xl border-b border-gray-100 px-4 py-3">
+          {/* Title Row */}
+          <div className="flex items-center justify-between mb-2.5">
+            <h2 className="text-lg font-black text-gray-900 tracking-tight">
+              {t('filters.freshIn')} <span className="text-primary-600">{t('filters.yourArea')}</span>
+            </h2>
+            {filteredProducts.length > 0 && (
+              <span className="text-[11px] font-bold text-gray-400 bg-gray-100 px-2.5 py-0.5 rounded-full">
+                {filteredProducts.length} items
+              </span>
+            )}
+          </div>
 
-              <button
-                onClick={() => setIsFilterDrawerOpen(true)}
-                className="lg:hidden flex-shrink-0 flex items-center space-x-2 bg-white border-2 border-gray-100 px-5 py-3 rounded-xl hover:bg-gray-50 transition-all text-sm font-bold text-gray-700 relative active:scale-95"
-              >
-                <Filter size={16} className={activeFilterCount > 0 ? 'text-primary-600' : 'text-gray-500'} />
-                <span>{t('filters.title')}</span>
-                {activeFilterCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-primary-600 text-white text-[10px] min-w-5 h-5 flex items-center justify-center rounded-full font-bold shadow-sm px-1">
-                    {activeFilterCount}
-                  </span>
-                )}
-              </button>
+          {/* Search + Filter Row */}
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={15} />
+              <input
+                type="text"
+                placeholder={t('filters.searchPlaceholder')}
+                value={searchQuery}
+                onChange={(e) => dispatch(setSearchQuery(e.target.value))}
+                className="w-full pl-9 pr-3 py-2.5 border border-gray-200 bg-gray-50 rounded-xl focus:border-primary-500 focus:bg-white outline-none transition-all placeholder:text-gray-400 text-sm font-medium"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => dispatch(setSearchQuery(''))}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <X size={14} />
+                </button>
+              )}
             </div>
+
+            <button
+              onClick={() => setIsFilterDrawerOpen(true)}
+              className={`lg:hidden flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border transition-all text-sm font-bold relative active:scale-95 ${
+                activeFilterCount > 0
+                  ? 'bg-primary-600 text-white border-primary-600'
+                  : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <Filter size={15} />
+              <span className="hidden xs:inline">{t('filters.title')}</span>
+              {activeFilterCount > 0 && (
+                <span className="bg-white text-primary-600 text-[10px] min-w-4 h-4 flex items-center justify-center rounded-full font-bold px-0.5">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
           </div>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-8 items-start w-full mt-8">
-          <aside className="hidden lg:block w-[280px] shrink-0 sticky top-[165px] z-10 bg-white p-6 rounded-2xl border border-gray-100 shadow-xl shadow-gray-200/50 max-h-[calc(100vh-185px)] overflow-y-auto no-scrollbar">
-            <FilterSidebar />
+        {/* ── Main content: sidebar + grid ── */}
+        <div className="flex flex-col lg:flex-row gap-6 items-start w-full mt-6">
+
+          {/* Desktop Sidebar */}
+          <aside className="hidden lg:block w-[260px] shrink-0 sticky top-[160px] z-10">
+            <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm max-h-[calc(100vh-190px)] overflow-y-auto no-scrollbar">
+              <FilterSidebar />
+            </div>
           </aside>
 
+          {/* Product Grid */}
           <main className="flex-1 w-full min-w-0">
-            <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-              className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6"
-            >
-              {filteredProducts.length > 0 ? (
-                filteredProducts.map((product: any) => (
-                  <motion.div key={product.id} variants={itemVariants}>
-                    <ProductCard product={product} />
-                  </motion.div>
-                ))
-              ) : (
-                <div className="col-span-full py-24 text-center space-y-4 bg-white rounded-2xl border-2 border-dashed border-gray-100">
-                  <div className="bg-primary-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto text-primary-200">
-                    <Filter size={48} />
+            {loading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="bg-white rounded-xl border border-gray-100 overflow-hidden animate-pulse">
+                    <div className="aspect-[4/3] bg-gray-100" />
+                    <div className="p-4 space-y-3">
+                      <div className="h-4 bg-gray-100 rounded w-3/4" />
+                      <div className="h-3 bg-gray-100 rounded w-1/2" />
+                      <div className="h-8 bg-gray-100 rounded" />
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    <h3 className="text-2xl font-black text-primary-900 font-heading">{t('filters.noProducts')}</h3>
-                    <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">{t('filters.noProductsDesc')}</p>
+                ))}
+              </div>
+            ) : (
+              <motion.div
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4"
+              >
+                {filteredProducts.length > 0 ? (
+                  filteredProducts.map((product: any) => (
+                    <motion.div key={product.id} variants={itemVariants}>
+                      <ProductCard product={product} />
+                    </motion.div>
+                  ))
+                ) : (
+                  <div className="col-span-full py-20 text-center space-y-4">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto">
+                      <Filter size={28} className="text-gray-300" />
+                    </div>
+                    <div className="space-y-1">
+                      <h3 className="text-base font-black text-gray-700">{t('filters.noProducts')}</h3>
+                      <p className="text-gray-400 text-xs font-medium">{t('filters.noProductsDesc')}</p>
+                    </div>
+                    {activeFilterCount > 0 && (
+                      <button
+                        onClick={() => dispatch(resetFilters())}
+                        className="text-primary-600 text-sm font-bold underline underline-offset-2"
+                      >
+                        {t('filters.clear')}
+                      </button>
+                    )}
                   </div>
-                </div>
-              )}
-            </motion.div>
+                )}
+              </motion.div>
+            )}
           </main>
         </div>
 
+        {/* ── Filter Bottom Drawer (mobile) ── */}
         <Drawer.Root open={isFilterDrawerOpen} onOpenChange={setIsFilterDrawerOpen}>
           <Drawer.Portal>
             <Drawer.Overlay className="fixed inset-0 bg-black/40 z-[100]" />
-            <Drawer.Content className="bg-white flex flex-col rounded-t-[1.5rem] h-[92vh] fixed bottom-0 left-0 right-0 z-[101] outline-none border-t border-gray-100">
-              <div className="p-6 bg-white rounded-t-[1.5rem] flex-1 overflow-y-auto w-full max-w-md mx-auto relative no-scrollbar">
-                <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-gray-200 mb-8" />
-                <div className="flex justify-between items-center mb-8">
-                  <h2 className="text-2xl font-black text-primary-900 font-heading">{t('filters.title')}</h2>
+            <Drawer.Content className="bg-white flex flex-col rounded-t-[1.5rem] h-[92vh] fixed bottom-0 left-0 right-0 z-[101] outline-none">
+              <div className="p-5 bg-white rounded-t-[1.5rem] flex-1 overflow-y-auto no-scrollbar">
+                <div className="mx-auto w-10 h-1 flex-shrink-0 rounded-full bg-gray-200 mb-6" />
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-lg font-black text-gray-900">{t('filters.title')}</h2>
                   <button
                     onClick={() => setIsFilterDrawerOpen(false)}
-                    className="bg-gray-100 hover:bg-gray-200 p-3 rounded-xl text-gray-400 transition-colors active:scale-90"
+                    className="p-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-500 transition-all active:scale-90"
                   >
-                    <X size={20} />
+                    <X size={18} />
                   </button>
                 </div>
                 <FilterSidebar />
               </div>
 
-              <div className="p-6 bg-white border-t border-gray-50 flex gap-4 outline-none w-full max-w-md mx-auto pb-10">
+              <div className="p-4 bg-white border-t border-gray-100 flex gap-3 pb-8">
                 <button
                   onClick={() => { dispatch(resetFilters()); setIsFilterDrawerOpen(false); }}
-                  className="flex-1 py-4 font-bold text-gray-500 border-2 border-gray-100 bg-white hover:bg-gray-50 rounded-2xl transition-all active:scale-95"
+                  className="flex-1 py-3.5 font-bold text-gray-600 border-2 border-gray-100 bg-white hover:bg-gray-50 rounded-xl transition-all active:scale-95 text-sm"
                 >
                   {t('filters.clear')}
                 </button>
                 <button
                   onClick={() => setIsFilterDrawerOpen(false)}
-                  className="flex-shrink-0 w-2/3 py-4 font-black text-white bg-primary-600 hover:bg-primary-700 rounded-2xl transition-all shadow-xl shadow-primary-200 active:scale-95"
+                  className="flex-[2] py-3.5 font-black text-white bg-primary-600 hover:bg-primary-700 rounded-xl transition-all shadow-lg shadow-primary-100 active:scale-95 text-sm"
                 >
                   {t('filters.apply')}
                 </button>

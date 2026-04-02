@@ -147,3 +147,16 @@ body {
     scrollbar-width: none;
   }
 }
+
+@layer base {
+
+  button,
+  a,
+  [role="button"],
+  label[for],
+  select,
+  input[type="checkbox"],
+  input[type="radio"] {
+    cursor: pointer;
+  }
+}
