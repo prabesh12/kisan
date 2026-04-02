@@ -186,7 +186,7 @@ const ProductDetails: React.FC = () => {
                 </span>
               </div>
               
-              <h1 className="text-4xl lg:text-5xl font-black text-gray-900 tracking-tight leading-tight">
+              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-gray-900 tracking-tight leading-tight">
                 {product.name}
               </h1>
 
@@ -205,11 +205,11 @@ const ProductDetails: React.FC = () => {
             <div className="p-6 bg-gray-50 rounded-3xl space-y-6">
               <div className="space-y-1">
                 <div className="text-sm font-bold text-gray-400 uppercase tracking-widest">{t('product.price')}</div>
-                <div className="text-5xl font-black text-gray-900 leading-none">
+                <div className="text-3xl sm:text-5xl font-black text-gray-900 leading-none">
                   {product.listingType === 'sell' ? (
                     <>
-                      <span className="text-2xl mr-1">Rs</span>{product.price}
-                      <span className="text-xl text-gray-400 font-bold ml-2">/ {product.unit}</span>
+                      <span className="text-xl sm:text-2xl mr-1">Rs</span>{product.price}
+                      <span className="text-lg sm:text-xl text-gray-400 font-bold ml-2">/ {product.unit}</span>
                     </>
                   ) : product.listingType === 'free' ? t('product.free') : t('filters.types.exchange')}
                 </div>
@@ -250,14 +250,14 @@ const ProductDetails: React.FC = () => {
         <div className="border-b border-gray-100 flex gap-8 px-6 sm:px-0">
           <button 
             onClick={() => setActiveTab('description')}
-            className={`pb-4 text-xl font-black uppercase tracking-widest transition-all relative ${activeTab === 'description' ? 'text-primary-600' : 'text-gray-400 hover:text-gray-600'}`}
+            className={`pb-2 text-sm sm:text-xl font-black uppercase tracking-widest transition-all relative ${activeTab === 'description' ? 'text-primary-600' : 'text-gray-400 hover:text-gray-600'}`}
           >
             {t('product.description')}
             {activeTab === 'description' && <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary-600 rounded-full" />}
           </button>
           <button 
             onClick={() => setActiveTab('reviews')}
-            className={`pb-4 text-xl font-black uppercase tracking-widest transition-all relative ${activeTab === 'reviews' ? 'text-primary-600' : 'text-gray-400 hover:text-gray-600'}`}
+            className={`pb-2 text-sm sm:text-xl font-black uppercase tracking-widest transition-all relative ${activeTab === 'reviews' ? 'text-primary-600' : 'text-gray-400 hover:text-gray-600'}`}
           >
             Reviews
             {activeTab === 'reviews' && <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary-600 rounded-full" />}
@@ -267,7 +267,7 @@ const ProductDetails: React.FC = () => {
         <div className="py-10 px-6 sm:px-0">
           {activeTab === 'description' ? (
             <div className="max-w-4xl space-y-8">
-              <p className="text-gray-600 text-xl leading-relaxed font-medium whitespace-pre-wrap">
+              <p className="text-gray-600 text-lg sm:text-xl leading-relaxed font-medium whitespace-pre-wrap">
                 {product.description}
               </p>
               
@@ -310,7 +310,7 @@ const ProductDetails: React.FC = () => {
              to={`/seller/${product.sellerId}`}
              className="flex items-center space-x-6 hover:bg-gray-50 p-4 -m-4 rounded-xl transition-all group"
            >
-              <div className="w-24 h-24 rounded-xl overflow-hidden border-4 border-primary-50 shadow-xl group-hover:border-primary-200 transition-all">
+              <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-xl overflow-hidden border-4 border-primary-50 shadow-xl group-hover:border-primary-200 transition-all flex-shrink-0">
                  <img 
                    src={seller?.profilePhoto || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=200'} 
                    className="w-full h-full object-cover" 
@@ -318,7 +318,7 @@ const ProductDetails: React.FC = () => {
                  />
               </div>
               <div className="space-y-1">
-                 <h4 className="text-2xl font-black text-primary-900 leading-tight group-hover:text-primary-600 transition-colors">
+                 <h4 className="text-xl sm:text-2xl font-black text-primary-900 leading-tight group-hover:text-primary-600 transition-colors">
                     {seller?.farmName || product.sellerName}
                  </h4>
                  <div className="flex items-center space-x-2 text-gray-400 font-bold text-sm">
@@ -360,8 +360,8 @@ const ProductDetails: React.FC = () => {
         </div>
 
 
-      {/* Floating Bottom Bar (Mobile) */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-gray-100 p-4 pb-8 z-40 sm:hidden">
+      {/* Mobile Action Bar (Scrollable) */}
+      <div className="mt-12 bg-white border-t border-gray-100 p-6 sm:hidden">
          <div className="flex items-center space-x-4 max-w-xl mx-auto">
             <div className="flex-1">
                <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('product.price')}</div>

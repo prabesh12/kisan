@@ -32,6 +32,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 text-gray-900 font-sans">
+      {/* Header */}
       {/* Desktop Header */}
       <header className="hidden md:flex bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50 px-8 py-4 justify-between items-center border-b border-gray-100">
         <Logo />
@@ -62,10 +63,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </Link>
           ) : (
             <Link to="/profile" className="flex items-center space-x-3 bg-gray-50 p-1.5 pr-4 rounded-full border border-gray-100 hover:bg-gray-100 transition-all">
-               <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold border border-primary-200">
+              <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold border border-primary-200">
                   {user?.name?.charAt(0).toUpperCase() || <User size={16} />}
-               </div>
-               <span className="text-sm font-bold text-gray-700">{user?.name?.split(' ')[0]}</span>
+              </div>
+              <span className="text-sm font-bold text-gray-700">{user?.name?.split(' ')[0]}</span>
             </Link>
           )}
 
@@ -166,6 +167,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
       </footer>
 
+      {/* Mobile Bottom Navigation */}
       {/* Mobile Bottom Navigation */}
       {/* Mobile Bottom Navigation */}
       <footer className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white shadow-[0_-8px_30px_rgb(0,0,0,0.04)] border-t border-gray-100 pb-safe">
