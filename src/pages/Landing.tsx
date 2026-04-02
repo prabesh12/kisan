@@ -9,7 +9,7 @@ const Landing: React.FC = () => {
   const { t } = useTranslation();
   return (
     <PageTransition>
-      <div className="flex flex-col items-center justify-center space-y-16 py-12 px-4 text-center">
+      <div className="flex flex-col items-center justify-center space-y-12 pt-8 pb-12 text-center">
         {/* Hero Section */}
         <div className="max-w-3xl space-y-6">
           <h1 className="text-5xl md:text-7xl font-bold font-heading text-primary-900 tracking-tight leading-tight">
@@ -39,8 +39,8 @@ const Landing: React.FC = () => {
         </div>
 
         {/* Feature Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-5xl pt-12">
-          <div className="p-8 bg-white rounded-2xl shadow-sm border border-gray-100 text-left space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl pt-8">
+          <div className="p-6 bg-white rounded-2xl shadow-sm border border-gray-100 text-left space-y-4">
             <div className="bg-primary-100 w-12 h-12 flex items-center justify-center rounded-xl text-primary-700">
               <Leaf size={24} />
             </div>
@@ -48,7 +48,7 @@ const Landing: React.FC = () => {
             <p className="text-gray-600 font-medium">{t('landing.features.marketplaceDesc')}</p>
           </div>
 
-          <div className="p-8 bg-white rounded-2xl shadow-sm border border-gray-100 text-left space-y-4">
+          <div className="p-6 bg-white rounded-2xl shadow-sm border border-gray-100 text-left space-y-4">
             <div className="bg-primary-100 w-12 h-12 flex items-center justify-center rounded-xl text-primary-700">
               <Users size={24} />
             </div>
@@ -56,7 +56,7 @@ const Landing: React.FC = () => {
             <p className="text-gray-600 font-medium">{t('landing.features.exchangeDesc')}</p>
           </div>
 
-          <div className="p-8 bg-white rounded-2xl shadow-sm border border-gray-100 text-left space-y-4">
+          <div className="p-6 bg-white rounded-2xl shadow-sm border border-gray-100 text-left space-y-4">
             <div className="bg-blue-100 w-12 h-12 flex items-center justify-center rounded-xl text-blue-700">
               <Sprout size={24} />
             </div>

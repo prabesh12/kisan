@@ -99,7 +99,7 @@ const PublicProfile: React.FC = () => {
         </div>
       </div>
 
-      <div className="mt-16 text-center px-6 max-w-4xl mx-auto space-y-8">
+      <div className="mt-16 text-center max-w-4xl mx-auto space-y-6">
         <div className="space-y-3">
            <div className="flex items-center justify-center space-x-2 text-primary-600 font-black uppercase tracking-[0.2em] text-xs">
               <Store size={14} />
@@ -167,7 +167,7 @@ const PublicProfile: React.FC = () => {
         </motion.div>
 
         {/* Listings Section */}
-        <div className="space-y-8 pt-6">
+        <div className="space-y-6 pt-4">
            <div className="flex items-center justify-between px-2">
               <h2 className="text-2xl font-black text-primary-900 tracking-tight font-heading">
                  {t('profile.current')} <span className="text-primary-600">{t('profile.offeredItems')}</span>
@@ -180,7 +180,7 @@ const PublicProfile: React.FC = () => {
                variants={containerVariants}
                initial="hidden"
                animate="visible"
-               className="grid grid-cols-1 sm:grid-cols-2 gap-6 pb-12"
+               className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-12"
              >
                 {sellerProducts.map(product => (
                   <motion.div variants={itemVariants} key={product.id}>

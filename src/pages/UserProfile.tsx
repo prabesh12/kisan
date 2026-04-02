@@ -69,7 +69,7 @@ const UserProfile: React.FC = () => {
 
   return (
     <PageTransition>
-      <div className="max-w-2xl mx-auto py-8 px-4">
+      <div className="max-w-2xl mx-auto pb-4">
         <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100">
           {/* Header/Cover */}
           <div className="h-40 bg-gradient-to-r from-primary-600 to-earth-500 relative">

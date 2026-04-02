@@ -68,7 +68,7 @@ const MyListings: React.FC = () => {
 
   return (
     <PageTransition>
-      <div className="space-y-8">
+      <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
             <h2 className="text-3xl font-black font-heading text-primary-900 tracking-tight">
@@ -95,7 +95,7 @@ const MyListings: React.FC = () => {
           animate="visible"
           className="grid grid-cols-1 sm:grid-cols-3 gap-4"
         >
-          <motion.div variants={itemVariants} className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex items-center space-x-4">
+          <motion.div variants={itemVariants} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center space-x-4">
             <div className="bg-primary-50 p-3 rounded-2xl text-primary-600">
               <Package size={24} />
             </div>
@@ -105,7 +105,7 @@ const MyListings: React.FC = () => {
             </div>
           </motion.div>
 
-          <motion.div variants={itemVariants} className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex items-center space-x-4">
+          <motion.div variants={itemVariants} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center space-x-4">
             <div className="bg-green-50 p-3 rounded-2xl text-green-600">
               <TrendingUp size={24} />
             </div>
@@ -115,7 +115,7 @@ const MyListings: React.FC = () => {
             </div>
           </motion.div>
 
-          <motion.div variants={itemVariants} className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex items-center space-x-4">
+          <motion.div variants={itemVariants} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center space-x-4">
             <div className="bg-blue-50 p-3 rounded-2xl text-blue-600">
               <Eye size={24} />
             </div>
@@ -132,7 +132,7 @@ const MyListings: React.FC = () => {
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-20"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-20"
           >
             {myListings.map((product) => (
               <motion.div variants={itemVariants} key={product.id} className="relative group flex flex-col">
