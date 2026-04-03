@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../hooks/redux';
 import {
@@ -16,10 +16,46 @@ import {
 import { useTranslation } from 'react-i18next';
 import { findUserById } from '../utils/storage';
 import { incrementProductViews } from '../features/products/productSlice';
-import { useEffect } from 'react';
 import MapModal from '../components/MapModal';
 import PageTransition from '../components/PageTransition';
 import { CheckCircle2 } from 'lucide-react';
+import { gql } from '@apollo/client/core/index.js';
+import { useQuery } from '@apollo/client/react/index.js';
+
+const GET_PRODUCT = gql`
+  query GetProduct($id: ID!) {
+    getProduct(id: $id) {
+      id
+      name
+      description
+      price
+      quantity
+      unit
+      category
+      listingType
+      photos
+      thumbnail
+      location {
+        city
+        coordinates {
+          lat
+          lng
+        }
+      }
+      seller {
+        id
+        name
+        email
+        phoneNumber
+      }
+      exchangePreference
+      contactNumbers
+      status
+      tags
+      createdAt
+    }
+  }
+`;
 
 const ProductDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -31,8 +67,23 @@ const ProductDetails: React.FC = () => {
   const { user: currentUser, guestLocation } = useAppSelector((state) => state.auth);
 
   const userCoords = currentUser?.location.coordinates || guestLocation;
-  const product = items.find((p) => p.id === id);
-  const seller = product ? findUserById(product.sellerId) : null;
+
+  // 1. Initial partial product from Redux
+  const reduxProduct = items.find((p) => p.id === id);
+
+  // 2. Fetch full product details on-demand
+  const { data, loading } = useQuery<{ getProduct: any }>(GET_PRODUCT, {
+    variables: { id },
+    skip: !id,
+  });
+
+  // 3. Derived product: prioritized fetched data, fallback to Redux
+  const product = data?.getProduct || reduxProduct;
+  
+  // 4. Normalized seller ID and data
+  const sellerId = product?.seller?.id || product?.sellerId;
+  const sellerName = product?.seller?.name || product?.sellerName;
+  const seller = product?.seller || (sellerId ? findUserById(sellerId) : null);
 
   const [activeImage, setActiveImage] = useState(0);
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
@@ -56,6 +107,15 @@ const ProductDetails: React.FC = () => {
         Math.sin(dLon / 2);
     return (R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))).toFixed(1);
   }, [product, userCoords]);
+
+  if (loading && !reduxProduct) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 space-y-4">
+        <div className="w-12 h-12 border-4 border-primary-600 border-t-transparent rounded-full animate-spin" />
+        <p className="text-gray-500 font-bold">{t('common.loading') || 'Loading Product...'}</p>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -84,6 +144,10 @@ const ProductDetails: React.FC = () => {
     exchange: 'bg-indigo-50 text-indigo-700 border-indigo-200',
   }[product.listingType] ?? 'bg-gray-50 text-gray-700 border-gray-200';
 
+  const formattedDate = product.createdAt 
+    ? new Date(Number(product.createdAt) || product.createdAt).toLocaleDateString()
+    : t('common.recently') || 'Recently';
+
   return (
     <PageTransition>
       {/* ── Desktop: two-column, Mobile: single-column stacked ── */}
@@ -94,7 +158,7 @@ const ProductDetails: React.FC = () => {
           {/* Main image */}
           <div className="relative aspect-[4/3] lg:aspect-square lg:rounded-2xl overflow-hidden bg-gray-100 group">
             <img
-              src={product.photos[activeImage]}
+              src={(product.photos && product.photos[activeImage]) || product.thumbnail || 'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=400'}
               alt={product.name}
               className={`w-full h-full object-cover transition-all duration-700 group-hover:scale-[1.02] ${
                 product.status === 'sold' ? 'grayscale opacity-70' : ''
@@ -129,7 +193,7 @@ const ProductDetails: React.FC = () => {
             )}
 
             {/* Gallery arrows (desktop only) */}
-            {product.photos.length > 1 && (
+            {product.photos?.length && product.photos.length > 1 && (
               <>
                 <button
                   onClick={(e) => { e.stopPropagation(); setActiveImage(p => p === 0 ? product.photos.length - 1 : p - 1); }}
@@ -147,9 +211,9 @@ const ProductDetails: React.FC = () => {
             )}
 
             {/* Dot indicators */}
-            {product.photos.length > 1 && (
+            {product.photos?.length && product.photos.length > 1 && (
               <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5">
-                {product.photos.map((_, i) => (
+                {product.photos?.map((_, i) => (
                   <button
                     key={i}
                     onClick={() => setActiveImage(i)}
@@ -161,9 +225,9 @@ const ProductDetails: React.FC = () => {
           </div>
 
           {/* Thumbnail strip */}
-          {product.photos.length > 1 && (
+          {product.photos?.length && product.photos.length > 1 && (
             <div className="flex gap-2 overflow-x-auto px-4 lg:px-0 py-3 no-scrollbar">
-              {product.photos.map((photo, i) => (
+              {product.photos?.map((photo, i) => (
                 <button
                   key={i}
                   onClick={() => setActiveImage(i)}
@@ -201,7 +265,7 @@ const ProductDetails: React.FC = () => {
               </span>
               <span className="flex items-center gap-1">
                 <Clock size={12} className="text-orange-400" />
-                {new Date(product.createdAt).toLocaleDateString()}
+                {formattedDate}
               </span>
             </div>
           </div>
@@ -313,17 +377,17 @@ const ProductDetails: React.FC = () => {
                 </span>
               )}
             </div>
-            <Link to={`/seller/${product.sellerId}`} className="flex items-center gap-3 group">
+            <Link to={`/seller/${seller?.id || product.sellerId}`} className="flex items-center gap-3 group">
               <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-gray-100 flex-shrink-0 group-hover:border-primary-200 transition-all shadow-sm">
                 <img
                   src={seller?.profilePhoto || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=200'}
                   className="w-full h-full object-cover"
-                  alt={product.sellerName}
+                  alt={sellerName}
                 />
               </div>
               <div className="flex-1 min-w-0">
                 <h4 className="text-sm font-black text-gray-900 group-hover:text-primary-600 transition-colors truncate">
-                  {seller?.farmName || product.sellerName}
+                  {seller?.farmName || sellerName}
                 </h4>
                 <div className="flex items-center gap-2.5 mt-0.5">
                   <span className="flex items-center gap-1 text-gray-400 text-[11px]">

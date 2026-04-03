@@ -49,7 +49,7 @@ const GET_PRODUCTS = gql`
       quantity
       category
       listingType
-      photos
+      thumbnail
       location {
         city
         coordinates {

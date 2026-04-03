@@ -10,7 +10,8 @@ export interface Product {
   sellerName: string;
   name: string;
   category: Category;
-  photos: string[];
+  photos?: string[];
+  thumbnail?: string;
   quantity: number;
   unit: string;
   listingType: ListingType;

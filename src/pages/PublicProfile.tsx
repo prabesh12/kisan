@@ -49,6 +49,7 @@ const GET_PRODUCTS = gql`
       category
       listingType
       photos
+      thumbnail
       location {
         city
         coordinates {
@@ -92,7 +93,7 @@ const PublicProfile: React.FC = () => {
 
   const seller = userData?.getUser;
   const sellerProducts = useMemo(() => {
-    return (productsData?.getProducts || []).filter((p: any) => p.status === 'active');
+    return (productsData?.getProducts || []).filter((p: any) => !p.status || p.status === 'active');
   }, [productsData]);
 
   const totalViews = useMemo(() => {

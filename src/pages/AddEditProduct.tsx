@@ -15,10 +15,48 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import PageTransition from '../components/PageTransition';
 import { gql } from '@apollo/client/core/index.js';
-import { useMutation } from '@apollo/client/react/index.js';
+import { useMutation, useQuery } from '@apollo/client/react/index.js';
 import { toast } from 'react-hot-toast';
 
-const MAX_FILE_SIZE = 4 * 1024 * 1024; // 4MB safe limit for Vercel
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB limit for raw file before compression
+const COMPRESSED_MAX_SIZE = 1024; // Max width/height for main photo
+const THUMBNAIL_MAX_SIZE = 300; // Max width/height for feed thumbnail
+const COMPRESSED_QUALITY = 0.7; // JPEG quality
+
+const compressImage = (file: File, maxSize: number, quality: number): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxSize) {
+            height *= maxSize / width;
+            width = maxSize;
+          }
+        } else {
+          if (height > maxSize) {
+            width *= maxSize / height;
+            height = maxSize;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = (err) => reject(err);
+    };
+    reader.onerror = (err) => reject(err);
+  });
+};
 
 const CREATE_PRODUCT_MUTATION = gql`
   mutation CreateProduct(
@@ -32,6 +70,7 @@ const CREATE_PRODUCT_MUTATION = gql`
     $exchangePreference: String
     $contactNumbers: [String!]!
     $photos: [String!]!
+    $thumbnail: String
     $location: LocationInput!
   ) {
     createProduct(
@@ -45,6 +84,7 @@ const CREATE_PRODUCT_MUTATION = gql`
       exchangePreference: $exchangePreference
       contactNumbers: $contactNumbers
       photos: $photos
+      thumbnail: $thumbnail
       location: $location
     ) {
       id
@@ -66,6 +106,7 @@ const UPDATE_PRODUCT_MUTATION = gql`
     $exchangePreference: String
     $contactNumbers: [String!]
     $photos: [String!]
+    $thumbnail: String
     $location: LocationInput
     $status: String
   ) {
@@ -81,6 +122,7 @@ const UPDATE_PRODUCT_MUTATION = gql`
       exchangePreference: $exchangePreference
       contactNumbers: $contactNumbers
       photos: $photos
+      thumbnail: $thumbnail
       location: $location
       status: $status
     ) {
@@ -89,6 +131,37 @@ const UPDATE_PRODUCT_MUTATION = gql`
     }
   }
 `;
+
+const GET_PRODUCT_QUERY = gql`
+  query GetProduct($id: ID!) {
+    getProduct(id: $id) {
+      id
+      name
+      description
+      price
+      quantity
+      unit
+      category
+      listingType
+      exchangePreference
+      contactNumbers
+      photos
+      thumbnail
+      location {
+        city
+        coordinates {
+          lat
+          lng
+        }
+      }
+      status
+    }
+  }
+`;
+
+interface GetProductData {
+  getProduct: any;
+}
 
 const phoneRegex = /^9\d{9}$/;
 
@@ -142,11 +215,19 @@ const AddEditProduct: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isEditMode = !!id;
-  const existingProduct = items.find((p) => p.id === id);
-
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [photos, setPhotos] = useState<string[]>([]);
+  const [thumbnail, setThumbnail] = useState<string>('');
   const [serverError, setServerError] = useState<string | null>(null);
+
+  // 1. Fetch full data if in Edit mode (on-demand fetch)
+  const { data: fetchedData, loading: fetchLoading } = useQuery<GetProductData>(GET_PRODUCT_QUERY, {
+    variables: { id },
+    skip: !isEditMode,
+  });
+
+  // 2. Derive base product (fetched data > Redux fallback)
+  const existingProduct = fetchedData?.getProduct || items.find((p) => p.id === id);
 
   const { register, handleSubmit, control, watch, setValue, reset, formState: { errors } } = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
@@ -178,8 +259,12 @@ const AddEditProduct: React.FC = () => {
 
   const listingType = watch('listingType');
 
+  // Avoid re-resetting if we already have the full data
+  const [hasReset, setHasReset] = useState(false);
+
   useEffect(() => {
-    if (isEditMode && existingProduct) {
+    if (isEditMode && existingProduct && !hasReset) {
+      // Only reset the form once when the full data arrives (or fallback)
       const data: any = {
         name: existingProduct.name,
         category: existingProduct.category,
@@ -198,8 +283,18 @@ const AddEditProduct: React.FC = () => {
         photos: existingProduct.photos || [],
       };
       reset(data);
-      setPhotos(existingProduct.photos || []);
-    } else if (user) {
+      if (existingProduct.photos?.length) {
+        setPhotos(existingProduct.photos);
+      }
+      if (existingProduct.thumbnail) {
+        setThumbnail(existingProduct.thumbnail);
+      }
+      
+      // If we have full photos array, we consider it a complete reset
+      if (existingProduct.photos?.length) {
+        setHasReset(true);
+      }
+    } else if (user && !isEditMode) {
       if (user.location?.city) setValue('city', user.location.city);
       if (user.location?.coordinates) setValue('coordinates', user.location.coordinates);
       if (user.phone) setValue('contactNumbers.0', user.phone);
@@ -219,6 +314,14 @@ const AddEditProduct: React.FC = () => {
     );
   }
 
+
+  if (isEditMode && fetchLoading && !existingProduct) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-600 border-t-transparent" />
+      </div>
+    );
+  }
 
   const onSubmit = async (data: ProductFormData) => {
     setServerError(null);
@@ -243,6 +346,7 @@ const AddEditProduct: React.FC = () => {
             exchangePreference: data.exchangePreference,
             contactNumbers: data.contactNumbers,
             photos: photos.length > 0 ? photos : existingProduct!.photos,
+            thumbnail: thumbnail || existingProduct!.thumbnail,
             location: {
               city: data.city,
               coordinates: data.coordinates
@@ -263,6 +367,7 @@ const AddEditProduct: React.FC = () => {
             exchangePreference: data.exchangePreference,
             contactNumbers: data.contactNumbers,
             photos: photos.length > 0 ? photos : ['https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=400'],
+            thumbnail: thumbnail,
             location: {
               city: data.city,
               coordinates: data.coordinates
@@ -275,10 +380,10 @@ const AddEditProduct: React.FC = () => {
       toast.success(isEditMode ? t('product.updateSuccess') || 'Product updated!' : t('product.publishSuccess') || 'Product published successfully!');
       navigate('/home');
     } catch (err: any) {
-      const errorMessage = err.message.includes('413') 
+      const errorMessage = err.message.includes('413')
         ? "This photo is too large for the internet! Please try a smaller file or a screenshot (under 4MB)."
         : err.graphQLErrors?.[0]?.message || err.message;
-      
+
       setServerError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -294,19 +399,27 @@ const AddEditProduct: React.FC = () => {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > MAX_FILE_SIZE) {
-        toast.error("This photo is too heavy! Please pick a smaller image (less than 4MB).");
+        toast.error("This photo is too heavy! Please pick a smaller image (less than 10MB).");
         e.target.value = ''; // Reset input
         return;
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhotos([reader.result as string]);
-      };
-      reader.readAsDataURL(file);
+
+      const loadingToast = toast.loading("Processing photo...");
+      try {
+        const [mainPhoto, thumbPhoto] = await Promise.all([
+          compressImage(file, COMPRESSED_MAX_SIZE, COMPRESSED_QUALITY),
+          compressImage(file, THUMBNAIL_MAX_SIZE, 0.6)
+        ]);
+        setPhotos([mainPhoto]);
+        setThumbnail(thumbPhoto);
+        toast.success("Photo optimized!", { id: loadingToast });
+      } catch (err) {
+        toast.error("Failed to process photo.", { id: loadingToast });
+      }
     }
   };
 
@@ -353,14 +466,14 @@ const AddEditProduct: React.FC = () => {
             {/* Photos Mockup */}
             <div className="md:col-span-2">
               <label className="block text-sm font-bold text-gray-700 ml-1 mb-2 uppercase tracking-widest">{t('product.uploadPhoto')}</label>
-              <input 
-                type="file" 
+              <input
+                type="file"
                 ref={fileInputRef}
-                className="hidden" 
+                className="hidden"
                 accept="image/*"
                 onChange={handleFileChange}
               />
-              <div 
+              <div
                 onClick={() => fileInputRef.current?.click()}
                 className="aspect-video bg-gray-50 border-4 border-dashed border-gray-100 rounded-2xl flex flex-col items-center justify-center text-gray-400 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-500 transition-all cursor-pointer group overflow-hidden relative"
               >
@@ -370,7 +483,7 @@ const AddEditProduct: React.FC = () => {
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white font-bold">
                       {t('product.uploadPhoto')}
                     </div>
-                    <button 
+                    <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -397,9 +510,8 @@ const AddEditProduct: React.FC = () => {
                 type="text"
                 placeholder={t('landing.features.marketplaceDesc')}
                 {...register('name')}
-                className={`w-full px-5 py-4 bg-gray-50 border-2 rounded-2xl shadow-sm focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all placeholder:text-gray-400 font-bold ${
-                  errors.name ? 'border-red-500' : 'border-gray-100'
-                }`}
+                className={`w-full px-5 py-4 bg-gray-50 border-2 rounded-2xl shadow-sm focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all placeholder:text-gray-400 font-bold ${errors.name ? 'border-red-500' : 'border-gray-100'
+                  }`}
               />
             </div>
 
@@ -431,7 +543,7 @@ const AddEditProduct: React.FC = () => {
                   <span>{t('product.totalStock')}</span>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <span className="text-[10px] font-black text-gray-400 uppercase ml-1">{t('product.amount')}</span>
@@ -440,9 +552,8 @@ const AddEditProduct: React.FC = () => {
                     min="0"
                     step="0.1"
                     {...register('quantity', { valueAsNumber: true })}
-                    className={`w-full px-5 py-4 bg-white border-2 rounded-xl shadow-sm focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all font-black text-xl text-primary-900 ${
-                      errors.quantity ? 'border-red-500' : 'border-primary-100'
-                    }`}
+                    className={`w-full px-5 py-4 bg-white border-2 rounded-xl shadow-sm focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all font-black text-xl text-primary-900 ${errors.quantity ? 'border-red-500' : 'border-primary-100'
+                      }`}
                   />
                 </div>
                 <div className="space-y-2">
@@ -452,9 +563,8 @@ const AddEditProduct: React.FC = () => {
                       type="text"
                       placeholder={t('product.unitPlaceholder')}
                       {...register('unit')}
-                      className={`w-full px-5 py-4 bg-white border-2 rounded-xl shadow-sm focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all font-bold text-gray-700 placeholder:text-gray-300 ${
-                        errors.unit ? 'border-red-500' : 'border-primary-100'
-                      }`}
+                      className={`w-full px-5 py-4 bg-white border-2 rounded-xl shadow-sm focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all font-bold text-gray-700 placeholder:text-gray-300 ${errors.unit ? 'border-red-500' : 'border-primary-100'
+                        }`}
                     />
                   </div>
                 </div>
@@ -462,23 +572,22 @@ const AddEditProduct: React.FC = () => {
 
               {/* Unit suggestions */}
               <div className="pt-2">
-                 <p className="text-[10px] font-black text-gray-400 uppercase mb-3 ml-1 tracking-widest">{t('product.commonUnits')}</p>
-                 <div className="flex flex-wrap gap-2">
-                    {['kg', 'gm', 'quintal', 'ltr', 'bunch', 'piece', 'dozen'].map((u) => (
-                      <button
-                        key={u}
-                        type="button"
-                        onClick={() => setValue('unit', u)}
-                        className={`px-4 py-2 rounded-lg text-xs font-bold transition-all border-2 ${
-                          watch('unit') === u 
-                          ? 'bg-primary-600 border-primary-600 text-white shadow-md scale-105' 
+                <p className="text-[10px] font-black text-gray-400 uppercase mb-3 ml-1 tracking-widest">{t('product.commonUnits')}</p>
+                <div className="flex flex-wrap gap-2">
+                  {['kg', 'gm', 'quintal', 'ltr', 'bunch', 'piece', 'dozen'].map((u) => (
+                    <button
+                      key={u}
+                      type="button"
+                      onClick={() => setValue('unit', u)}
+                      className={`px-4 py-2 rounded-lg text-xs font-bold transition-all border-2 ${watch('unit') === u
+                          ? 'bg-primary-600 border-primary-600 text-white shadow-md scale-105'
                           : 'bg-white border-gray-100 text-gray-500 hover:border-primary-200 hover:text-primary-600'
                         }`}
-                      >
-                        {u}
-                      </button>
-                    ))}
-                 </div>
+                    >
+                      {u}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -490,11 +599,10 @@ const AddEditProduct: React.FC = () => {
                     key={type}
                     type="button"
                     onClick={() => setValue('listingType', type)}
-                    className={`py-3 rounded-xl font-bold uppercase tracking-wider transition-all border-2 text-xs ${
-                      listingType === type 
-                        ? 'bg-primary-600 border-primary-600 text-white shadow-lg' 
+                    className={`py-3 rounded-xl font-bold uppercase tracking-wider transition-all border-2 text-xs ${listingType === type
+                        ? 'bg-primary-600 border-primary-600 text-white shadow-lg'
                         : 'bg-white border-gray-100 text-gray-500 hover:border-primary-200'
-                    }`}
+                      }`}
                   >
                     {t(`filters.types.${type}`)}
                   </button>
@@ -510,9 +618,8 @@ const AddEditProduct: React.FC = () => {
                 <input
                   type="number"
                   {...register('price', { valueAsNumber: true })}
-                  className={`w-full px-5 py-4 bg-gray-50 border-2 rounded-2xl shadow-sm focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all font-bold ${
-                    errors.price ? 'border-red-500' : 'border-gray-100'
-                  }`}
+                  className={`w-full px-5 py-4 bg-gray-50 border-2 rounded-2xl shadow-sm focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all font-bold ${errors.price ? 'border-red-500' : 'border-gray-100'
+                    }`}
                 />
               </div>
             )}
@@ -525,9 +632,8 @@ const AddEditProduct: React.FC = () => {
                   type="text"
                   placeholder={t('product.exchangePlaceholder')}
                   {...register('exchangePreference')}
-                  className={`w-full px-5 py-4 bg-gray-50 border-2 rounded-2xl shadow-sm focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all font-bold ${
-                    errors.exchangePreference ? 'border-red-500' : 'border-gray-100'
-                  }`}
+                  className={`w-full px-5 py-4 bg-gray-50 border-2 rounded-2xl shadow-sm focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all font-bold ${errors.exchangePreference ? 'border-red-500' : 'border-gray-100'
+                    }`}
                 />
               </div>
             )}
@@ -538,9 +644,8 @@ const AddEditProduct: React.FC = () => {
                 rows={4}
                 placeholder={`${t('landing.subtitle')} #organic #fresh #kathmandu`}
                 {...register('description')}
-                className={`w-full px-5 py-4 bg-gray-50 border-2 rounded-2xl shadow-sm focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all placeholder:text-gray-400 font-bold resize-none ${
-                  errors.description ? 'border-red-500' : 'border-gray-100'
-                }`}
+                className={`w-full px-5 py-4 bg-gray-50 border-2 rounded-2xl shadow-sm focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all placeholder:text-gray-400 font-bold resize-none ${errors.description ? 'border-red-500' : 'border-gray-100'
+                  }`}
               />
             </div>
 
@@ -552,11 +657,10 @@ const AddEditProduct: React.FC = () => {
                 type="tel"
                 placeholder="98XXXXXXXX"
                 {...register('contactNumbers.0')}
-                className={`w-full px-5 py-4 bg-gray-50 border-2 rounded-2xl shadow-sm focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all placeholder:text-gray-400 font-bold mb-4 ${
-                  errors.contactNumbers?.[0] ? 'border-red-500' : 'border-gray-100'
-                }`}
+                className={`w-full px-5 py-4 bg-gray-50 border-2 rounded-2xl shadow-sm focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all placeholder:text-gray-400 font-bold mb-4 ${errors.contactNumbers?.[0] ? 'border-red-500' : 'border-gray-100'
+                  }`}
               />
-              
+
               <label className="block text-sm font-bold text-gray-700 ml-1 mb-4 uppercase tracking-widest">
                 {t('product.contactSecondary')}
               </label>
@@ -564,13 +668,12 @@ const AddEditProduct: React.FC = () => {
                 type="tel"
                 placeholder="98XXXXXXXX"
                 {...register('contactNumbers.1')}
-                className={`w-full px-5 py-4 bg-gray-50 border-2 rounded-2xl shadow-sm focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all placeholder:text-gray-400 font-bold ${
-                  errors.contactNumbers?.[1] ? 'border-red-500' : 'border-gray-100'
-                }`}
+                className={`w-full px-5 py-4 bg-gray-50 border-2 rounded-2xl shadow-sm focus:ring-4 focus:ring-primary-100 focus:border-primary-500 outline-none transition-all placeholder:text-gray-400 font-bold ${errors.contactNumbers?.[1] ? 'border-red-500' : 'border-gray-100'
+                  }`}
               />
-               <p className="mt-2 text-[10px] sm:text-xs text-gray-400 font-medium px-1">
-                  {t('product.contactHelp')} {t('product.contactHelpDetail')}
-               </p>
+              <p className="mt-2 text-[10px] sm:text-xs text-gray-400 font-medium px-1">
+                {t('product.contactHelp')} {t('product.contactHelpDetail')}
+              </p>
             </div>
 
 
@@ -581,7 +684,7 @@ const AddEditProduct: React.FC = () => {
                 name="coordinates"
                 control={control}
                 render={({ field }) => (
-                  <MapPicker 
+                  <MapPicker
                     initialCenter={field.value}
                     onLocationSelect={(lat, lng) => field.onChange({ lat, lng })}
                   />

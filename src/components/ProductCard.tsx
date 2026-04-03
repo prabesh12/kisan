@@ -85,7 +85,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       {/* Image Container */}
       <div className="relative overflow-hidden aspect-[4/3] bg-gray-100">
         <img
-          src={product.photos[0] || 'https://via.placeholder.com/400'}
+          src={product.thumbnail || 'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=400'}
           alt={product.name}
           className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 ${product.status === 'sold' ? 'grayscale opacity-80' : ''}`}
         />

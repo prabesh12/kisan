@@ -88,7 +88,6 @@
       "views": "Total Views"
     }
   },
-
   "product": {
     "category": "Category",
     "quantity": "Quantity",
@@ -128,7 +127,8 @@
     "yourLocation": "Your Location",
     "sellerLocation": "Seller Location",
     "posted": "Posted",
-    "close": "Close"
+    "close": "Close",
+    "name": "Name"
   },
   "filters": {
     "title": "Filters",
@@ -155,7 +155,6 @@
       "priceLow": "Price: Low to High",
       "closest": "Distance: Closest First"
     },
-
     "noProducts": "No products found",
     "noProductsDesc": "Try adjusting your filters or search query.",
     "categories": {
