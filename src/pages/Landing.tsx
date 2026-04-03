@@ -12,7 +12,7 @@ const Landing: React.FC = () => {
       <div className="flex flex-col items-center justify-center space-y-12 pt-8 text-center">
         {/* Hero Section */}
         <div className="max-w-3xl space-y-6">
-          <h1 className="text-5xl md:text-7xl font-bold font-heading text-primary-900 tracking-tight leading-tight">
+          <h1 className="text-4xl md:text-6xl font-bold font-heading text-primary-900 tracking-tight leading-tight">
             {t('landing.title')}
           </h1>
           <p className="text-xl md:text-2xl text-gray-600 max-w-2xl mx-auto">
@@ -22,7 +22,7 @@ const Landing: React.FC = () => {
           <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4 pt-8">
             <Link
               to="/home"
-              className="bg-primary-600 text-white px-8 py-4 rounded-xl text-lg font-bold hover:bg-primary-700 hover:scale-105 transition-all shadow-xl flex items-center justify-center space-x-2"
+              className="bg-primary-600 text-white px-6 py-3.5 rounded-xl text-base font-bold hover:bg-primary-700 hover:scale-105 transition-all shadow-xl flex items-center justify-center space-x-2"
             >
               <span>{t('landing.explore')}</span>
               <ArrowRight size={20} />
@@ -30,7 +30,7 @@ const Landing: React.FC = () => {
 
             <Link
               to="/login"
-              className="bg-white border-2 border-primary-100 text-primary-700 px-8 py-4 rounded-xl text-lg font-bold hover:border-primary-300 hover:shadow-lg transition-all duration-700"
+              className="bg-white border-2 border-primary-100 text-primary-700 px-6 py-3.5 rounded-xl text-base font-bold hover:border-primary-300 hover:shadow-lg transition-all duration-700"
             >
               {t('landing.joinAsFarmer')}
             </Link>

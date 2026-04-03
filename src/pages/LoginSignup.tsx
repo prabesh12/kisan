@@ -143,7 +143,7 @@ const LoginSignup: React.FC = () => {
 
   return (
     <PageTransition>
-      <div className="max-w-md mx-auto py-12 px-6 bg-white rounded-3xl shadow-2xl mt-12 border border-gray-100">
+      <div className="max-w-md mx-auto py-10 px-6 bg-white rounded-3xl shadow-2xl mt-8 border border-gray-100">
         <div className="text-center space-y-4 mb-10">
           <Link to="/" className="flex items-center justify-center space-x-2 group mb-8">
             <div className="w-12 h-12 bg-primary-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-primary-200 group-hover:scale-110 transition-transform duration-300">
@@ -152,7 +152,7 @@ const LoginSignup: React.FC = () => {
             <span className="text-3xl font-black text-gray-900 tracking-tight">Kisan</span>
           </Link>
           
-          <h2 className="text-3xl font-black font-heading text-primary-900 tracking-tight">
+          <h2 className="text-2xl font-black font-heading text-primary-900 tracking-tight">
             {isLogin ? t('auth.welcome') : "Create Account"}
           </h2>
           <p className="text-gray-500 font-medium leading-relaxed">
@@ -214,7 +214,7 @@ const LoginSignup: React.FC = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-primary-600 text-white font-black py-5 rounded-2xl hover:bg-primary-700 disabled:opacity-50 shadow-xl shadow-primary-200 transition-all flex items-center justify-center space-x-3 text-lg active:scale-[0.98]"
+            className="w-full bg-primary-600 text-white font-black py-4 rounded-xl hover:bg-primary-700 disabled:opacity-50 shadow-lg shadow-primary-100 transition-all flex items-center justify-center space-x-3 text-base active:scale-[0.98]"
           >
             {isLoading ? (
               <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin" />

@@ -307,13 +307,13 @@ const HomeFeed: React.FC = () => {
               <div className="p-4 bg-white border-t border-gray-100 flex gap-3 pb-8">
                 <button
                   onClick={() => { dispatch(resetFilters()); setIsFilterDrawerOpen(false); }}
-                  className="flex-1 py-3.5 font-bold text-gray-600 border-2 border-gray-100 bg-white hover:bg-gray-50 rounded-xl transition-all active:scale-95 text-sm"
+                  className="flex-1 py-2.5 font-bold text-gray-600 border-2 border-gray-100 bg-white hover:bg-gray-50 rounded-xl transition-all active:scale-95 text-xs"
                 >
                   {t('filters.clear')}
                 </button>
                 <button
                   onClick={() => setIsFilterDrawerOpen(false)}
-                  className="flex-[2] py-3.5 font-black text-white bg-primary-600 hover:bg-primary-700 rounded-xl transition-all shadow-lg shadow-primary-100 active:scale-95 text-sm"
+                  className="flex-[2] py-2.5 font-black text-white bg-primary-600 hover:bg-primary-700 rounded-xl transition-all shadow-lg shadow-primary-100 active:scale-95 text-xs"
                 >
                   {t('filters.apply')}
                 </button>

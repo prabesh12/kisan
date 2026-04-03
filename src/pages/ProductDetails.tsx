@@ -241,7 +241,7 @@ const ProductDetails: React.FC = () => {
                 <a
                   key={idx}
                   href={`tel:${num}`}
-                  className={`w-full py-3.5 rounded-xl font-black text-sm transition-all flex items-center justify-center gap-2 active:scale-95 group ${
+                  className={`w-full py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 active:scale-95 group ${
                     idx === 0
                       ? 'bg-primary-600 text-white hover:bg-primary-700 shadow-lg shadow-primary-100'
                       : 'bg-white border-2 border-primary-100 text-primary-600 hover:bg-primary-50'
@@ -343,7 +343,7 @@ const ProductDetails: React.FC = () => {
             )}
             <button
               onClick={() => setIsMapModalOpen(true)}
-              className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-700 text-sm font-bold rounded-xl transition-all active:scale-95 border border-gray-100"
+              className="mt-3 w-full flex items-center justify-center gap-2 py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 text-xs font-bold rounded-xl transition-all active:scale-95 border border-gray-100"
             >
               <MapPin size={14} className="text-primary-500" />
               {t('product.viewMap')}

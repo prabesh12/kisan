@@ -490,7 +490,7 @@ const AddEditProduct: React.FC = () => {
                     key={type}
                     type="button"
                     onClick={() => setValue('listingType', type)}
-                    className={`py-4 rounded-2xl font-bold uppercase tracking-wider transition-all border-2 ${
+                    className={`py-3 rounded-xl font-bold uppercase tracking-wider transition-all border-2 text-xs ${
                       listingType === type 
                         ? 'bg-primary-600 border-primary-600 text-white shadow-lg' 
                         : 'bg-white border-gray-100 text-gray-500 hover:border-primary-200'
@@ -594,7 +594,7 @@ const AddEditProduct: React.FC = () => {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full bg-primary-600 text-white font-bold py-6 rounded-2xl hover:bg-primary-700 shadow-2xl transition-all flex items-center justify-center space-x-2 text-xl active:scale-[0.98]"
+            className="w-full bg-primary-600 text-white font-black py-4 rounded-xl hover:bg-primary-700 shadow-xl transition-all flex items-center justify-center space-x-2 text-lg active:scale-[0.98]"
           >
             {isSubmitting ? (
               <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin" />

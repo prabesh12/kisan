@@ -95,7 +95,7 @@ const UserProfile: React.FC = () => {
                   className="text-3xl font-black text-center text-primary-900 border-b-2 border-primary-200 outline-none focus:border-primary-600 transition-colors bg-transparent px-2 py-1 w-full max-w-sm mx-auto"
                 />
               ) : (
-                <h2 className="text-3xl font-black font-heading text-primary-900 tracking-tight">{user.name}</h2>
+                <h2 className="text-2xl font-black font-heading text-primary-900 tracking-tight">{user.name}</h2>
               )}
               <div className="flex items-center justify-center space-x-2 text-gray-500 font-bold uppercase tracking-widest text-xs">
                 <Phone size={14} className="text-primary-600" />
@@ -209,7 +209,7 @@ const UserProfile: React.FC = () => {
               {isEditing ? (
                 <button
                   onClick={handleSave}
-                   className="bg-primary-600 text-white font-bold py-4 rounded-xl hover:bg-primary-700 shadow-xl transition-all flex items-center justify-center space-x-2"
+                   className="bg-primary-600 text-white font-bold py-3.5 rounded-xl hover:bg-primary-700 shadow-xl transition-all flex items-center justify-center space-x-2 text-sm"
                 >
                   <Save size={20} />
                   <span>{t('profile.save')}</span>
@@ -218,7 +218,7 @@ const UserProfile: React.FC = () => {
               ) : (
                 <button
                   onClick={() => setIsEditing(true)}
-                   className="bg-white border-2 border-primary-600 text-primary-600 font-bold py-4 rounded-xl hover:bg-primary-50 transition-all flex items-center justify-center space-x-2"
+                   className="bg-white border-2 border-primary-600 text-primary-600 font-bold py-3.5 rounded-xl hover:bg-primary-50 transition-all flex items-center justify-center space-x-2 text-sm"
                 >
                   <UserIcon size={20} />
                   <span>{t('profile.edit')}</span>
@@ -228,9 +228,9 @@ const UserProfile: React.FC = () => {
 
               <button
                 onClick={handleLogout}
-                 className="bg-red-50 text-red-600 font-bold py-4 rounded-xl hover:bg-red-100 transition-all flex items-center justify-center space-x-2 border-2 border-transparent hover:border-red-200"
+                  className="bg-red-50 text-red-600 font-bold py-3 rounded-xl hover:bg-red-100 transition-all flex items-center justify-center space-x-2 border-2 border-transparent hover:border-red-200 text-sm"
               >
-                <LogOut size={20} />
+                <LogOut size={18} />
                 <span>{t('profile.signOut')}</span>
               </button>
 
