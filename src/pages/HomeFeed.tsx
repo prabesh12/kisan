@@ -124,6 +124,10 @@ const HomeFeed: React.FC = () => {
 
   const filteredProducts = useMemo(() => {
     let result = reduxProducts.filter((product: any) => {
+      // 1. Hide user's own products from the main feed
+      if (user && product.sellerId === user.id) return false;
+      
+      // 2. Hide sold items
       if (product.status === 'sold') return false;
       if (categories && categories.length > 0 && !categories.includes(product.category)) return false;
       if (listingTypes && listingTypes.length > 0 && !listingTypes.includes(product.listingType)) return false;

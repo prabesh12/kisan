@@ -138,11 +138,11 @@ const ProductDetails: React.FC = () => {
     ? product.contactNumbers
     : [(product as any).contactNumber || ''];
 
-  const listingBadge = {
+  const listingBadge = ({
     sell: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     free: 'bg-blue-50 text-blue-700 border-blue-200',
     exchange: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-  }[product.listingType] ?? 'bg-gray-50 text-gray-700 border-gray-200';
+  } as Record<string, string>)[product.listingType] ?? 'bg-gray-50 text-gray-700 border-gray-200';
 
   const formattedDate = product.createdAt 
     ? new Date(Number(product.createdAt) || product.createdAt).toLocaleDateString()
@@ -213,7 +213,7 @@ const ProductDetails: React.FC = () => {
             {/* Dot indicators */}
             {product.photos?.length && product.photos.length > 1 && (
               <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5">
-                {product.photos?.map((_, i) => (
+                {product.photos?.map((_: string, i: number) => (
                   <button
                     key={i}
                     onClick={() => setActiveImage(i)}
@@ -227,7 +227,7 @@ const ProductDetails: React.FC = () => {
           {/* Thumbnail strip */}
           {product.photos?.length && product.photos.length > 1 && (
             <div className="flex gap-2 overflow-x-auto px-4 lg:px-0 py-3 no-scrollbar">
-              {product.photos?.map((photo, i) => (
+              {product.photos?.map((photo: string, i: number) => (
                 <button
                   key={i}
                   onClick={() => setActiveImage(i)}
@@ -301,7 +301,7 @@ const ProductDetails: React.FC = () => {
 
             {/* Call Seller Buttons */}
             <div className="space-y-2">
-              {allContacts.map((num, idx) => (
+              {allContacts.map((num: string, idx: number) => (
                 <a
                   key={idx}
                   href={`tel:${num}`}
@@ -345,7 +345,7 @@ const ProductDetails: React.FC = () => {
                   </p>
                   {product.tags && product.tags.length > 0 && (
                     <div className="flex flex-wrap gap-2 pt-1">
-                      {product.tags.map(tag => (
+                      {product.tags.map((tag: string) => (
                         <Link
                           key={tag}
                           to={`/home?search=%23${tag}`}

@@ -14,4 +14,28 @@ export default defineConfig({
   optimizeDeps: {
     include: ['@apollo/client'],
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
+              return 'vendor-core';
+            }
+            if (id.includes('framer-motion') || id.includes('lucide-react')) {
+              return 'vendor-ui';
+            }
+            if (id.includes('@apollo') || id.includes('graphql')) {
+              return 'vendor-data';
+            }
+            if (id.includes('redux')) {
+              return 'vendor-state';
+            }
+            return 'vendor-others';
+          }
+        }
+      }
+    },
+    chunkSizeWarningLimit: 1000,
+  }
 })
