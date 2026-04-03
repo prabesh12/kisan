@@ -10,7 +10,53 @@ import { savePersistentProduct } from '../utils/storage';
 import PageTransition from '../components/PageTransition';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
+import { toast } from 'react-hot-toast';
 
+import { gql } from '@apollo/client/core/index.js';
+import { useMutation, useQuery } from '@apollo/client/react/index.js';
+import { PageLoader } from '../App';
+
+const GET_MY_LISTINGS = gql`
+  query GetMyListings($sellerId: String!) {
+    getProducts(sellerId: $sellerId) {
+      id
+      name
+      category
+      listingType
+      price
+      quantity
+      unit
+      thumbnail
+      status
+      views
+      sellerName
+      location {
+        city
+        coordinates {
+          lat
+          lng
+        }
+      }
+      seller {
+        id
+        name
+      }
+    }
+  }
+`;
+
+const UPDATE_PRODUCT_STATUS = gql`
+  mutation UpdateProductStatus($id: ID!, $status: String!) {
+    updateProduct(id: $id, status: $status) {
+      id
+      status
+    }
+  }
+`;
+
+interface GetMyListingsData {
+  getProducts: any[];
+}
 
 const MyListings: React.FC = () => {
   const { user } = useAppSelector((state) => state.auth);
@@ -19,27 +65,45 @@ const MyListings: React.FC = () => {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
 
+  // 1. Fetch authoritative listings from server
+  const { data, loading, refetch } = useQuery<GetMyListingsData>(GET_MY_LISTINGS, {
+    variables: { sellerId: user?.id },
+    skip: !user,
+    fetchPolicy: 'network-only'
+  });
+
+  // 2. Mutation for status toggle
+  const [updateStatus] = useMutation(UPDATE_PRODUCT_STATUS, {
+    onCompleted: () => refetch()
+  });
+
 
   if (!user) {
     navigate('/login');
     return null;
   }
 
-  const myListings = items.filter((item) => item.sellerId === user.id);
-  
-  // Stats calculation
-  const totalViews = myListings.reduce((acc, curr) => acc + (curr.views || 0), 0);
-  const activeCount = myListings.filter(p => p.status === 'active').length;
-  const soldCount = myListings.filter(p => p.status === 'sold').length;
+  const myListings = data?.getProducts || [];
 
-  const handleToggleSold = (id: string, currentStatus: 'active' | 'sold') => {
-    const newStatus = currentStatus === 'active' ? 'sold' : 'active';
-    dispatch(setSoldStatus({ id, status: newStatus }));
-    
-    // Persist to local storage
-    const product = items.find(p => p.id === id);
-    if (product) {
-        savePersistentProduct({ ...product, status: newStatus });
+  // Stats calculation
+  const totalViews = myListings.reduce((acc: number, curr: any) => acc + (curr.views || 0), 0);
+  const activeCount = myListings.filter((p: any) => p.status === 'active' || !p.status).length;
+  const soldCount = myListings.filter((p: any) => p.status === 'sold').length;
+
+  const handleToggleSold = async (id: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'sold' ? 'active' : 'sold';
+
+    // Optimistic UI update via Redux
+    dispatch(setSoldStatus({ id, status: newStatus as any }));
+
+    try {
+      await updateStatus({
+        variables: { id, status: newStatus }
+      });
+      toast.success(newStatus === 'active' ? 'Listing reactivated!' : 'Items marked as sold');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to update status');
     }
   };
 
@@ -65,6 +129,9 @@ const MyListings: React.FC = () => {
     }
   };
 
+  if (loading) {
+    return <PageLoader />
+  }
 
   return (
     <PageTransition>
@@ -75,7 +142,7 @@ const MyListings: React.FC = () => {
               {t('listings.title')}
             </h2>
             <p className="text-gray-500 font-bold uppercase tracking-widest text-[10px] sm:text-xs">
-               {t('listings.active')}
+              {t('listings.active')}
             </p>
           </div>
 
@@ -89,7 +156,7 @@ const MyListings: React.FC = () => {
         </div>
 
         {/* Stats Dashboard */}
-        <motion.div 
+        <motion.div
           variants={containerVariants}
           initial="hidden"
           animate="visible"
@@ -128,22 +195,22 @@ const MyListings: React.FC = () => {
 
 
         {myListings.length > 0 ? (
-          <motion.div 
+          <motion.div
             variants={containerVariants}
             initial="hidden"
             animate="visible"
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
           >
-            {myListings.map((product) => (
+            {myListings.map((product: any) => (
               <motion.div variants={itemVariants} key={product.id} className="relative group flex flex-col">
                 <div className={`relative flex-1 ${product.status === 'sold' ? 'grayscale opacity-75' : ''}`}>
                   <ProductCard product={product} />
-                  
+
                   {product.status === 'sold' && (
                     <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-                       <div className="bg-white/90 backdrop-blur-md px-6 py-2 rounded-full shadow-2xl border-2 border-green-600 text-green-700 font-black text-lg uppercase tracking-widest rotate-[-12deg]">
-                          {t('listings.markAsSold')}
-                       </div>
+                      <div className="bg-white/90 backdrop-blur-md px-6 py-2 rounded-full shadow-2xl border-2 border-green-600 text-green-700 font-black text-lg uppercase tracking-widest rotate-[-12deg]">
+                        {t('listings.markAsSold')}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -151,30 +218,29 @@ const MyListings: React.FC = () => {
                 {/* Management Controls */}
                 <div className="mt-4 flex space-x-2">
                   <button
-                      onClick={() => handleToggleSold(product.id, product.status)}
-                      className={`flex-1 flex items-center justify-center space-x-2 py-3 rounded-xl font-bold transition-all active:scale-95 ${
-                          product.status === 'sold' 
-                          ? 'bg-gray-100 text-gray-500 hover:bg-gray-200' 
-                          : 'bg-primary-600 text-white hover:bg-primary-700 shadow-md shadow-primary-200'
+                    onClick={() => handleToggleSold(product.id, product.status)}
+                    className={`flex-1 flex items-center justify-center space-x-2 py-3 rounded-xl font-bold transition-all active:scale-95 ${product.status === 'sold'
+                      ? 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                      : 'bg-primary-600 text-white hover:bg-primary-700 shadow-md shadow-primary-200'
                       }`}
                   >
-                      {product.status === 'active' ? (
-                          <>
-                              <CheckCircle2 size={18} />
-                              <span>{t('listings.markAsSold')}</span>
-                          </>
-                      ) : (
-                          <>
-                              <CheckCircle2 size={18} className="text-green-600" />
-                              <span>{t('listings.reactive')}</span>
-                          </>
-                      )}
+                    {product.status === 'active' ? (
+                      <>
+                        <CheckCircle2 size={18} />
+                        <span>{t('listings.markAsSold')}</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 size={18} className="text-green-600" />
+                        <span>{t('listings.reactive')}</span>
+                      </>
+                    )}
                   </button>
                   <button
-                     onClick={() => navigate(`/edit-product/${product.id}`)}
-                     className="p-3 bg-white border border-gray-200 rounded-xl text-gray-400 hover:text-primary-600 hover:border-primary-100 transition-all active:scale-95"
+                    onClick={() => navigate(`/edit-product/${product.id}`)}
+                    className="p-3 bg-white border border-gray-200 rounded-xl text-gray-400 hover:text-primary-600 hover:border-primary-100 transition-all active:scale-95"
                   >
-                     <Edit3 size={20} />
+                    <Edit3 size={20} />
                   </button>
                 </div>
               </motion.div>
@@ -186,7 +252,7 @@ const MyListings: React.FC = () => {
             <div className="bg-primary-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto text-primary-200">
               <ShoppingBag size={48} />
             </div>
-              <div className="space-y-2">
+            <div className="space-y-2">
               <h3 className="text-2xl font-black text-primary-900">{t('listings.empty')}</h3>
               <p className="text-gray-500 font-medium max-w-sm mx-auto">
                 {t('landing.subtitle')}

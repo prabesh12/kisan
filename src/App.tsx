@@ -22,7 +22,7 @@ const AddEditProduct = React.lazy(() => import('./pages/AddEditProduct'));
 const ProductDetails = React.lazy(() => import('./pages/ProductDetails'));
 const PublicProfile = React.lazy(() => import('./pages/PublicProfile'));
 
-const PageLoader = () => (
+export const PageLoader = () => (
   <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
     <div className="relative">
       <div className="w-16 h-16 border-4 border-primary-100 rounded-full animate-ping opacity-20" />

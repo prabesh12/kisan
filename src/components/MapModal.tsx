@@ -36,7 +36,7 @@ const RoutingMachine = ({ buyerLat, buyerLng, sellerLat, sellerLng }: { buyerLat
 
   useEffect(() => {
     if (!map) return;
-    
+
     // @ts-ignore - leaflet-routing-machine adds routing to L
     const plan = (L.Routing as any).plan([
       L.latLng(buyerLat, buyerLng),
@@ -82,7 +82,7 @@ const MapModal: React.FC<MapModalProps> = ({ isOpen, onClose, lat, lng, title, l
   const modalContent = (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-8">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      
+
       <div className="relative bg-white w-full max-w-5xl rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col h-[85vh] max-h-[900px]">
         <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-white shrink-0">
           <div className="flex items-center space-x-3">
@@ -94,7 +94,7 @@ const MapModal: React.FC<MapModalProps> = ({ isOpen, onClose, lat, lng, title, l
               {locationName && <p className="text-sm text-gray-500 font-bold uppercase tracking-widest">{locationName}</p>}
             </div>
           </div>
-          <button 
+          <button
             onClick={onClose}
             className="p-3 hover:bg-gray-100 rounded-2xl transition-colors transition-transform active:scale-90 bg-gray-50"
           >
@@ -118,7 +118,7 @@ const MapModal: React.FC<MapModalProps> = ({ isOpen, onClose, lat, lng, title, l
                 {title} ({t('product.seller') || 'Seller'})
               </Popup>
             </Marker>
-            
+
             {buyerLat && buyerLng && (
               <Marker position={[buyerLat, buyerLng]}>
                 <Popup className="font-bold font-sans">
@@ -128,17 +128,17 @@ const MapModal: React.FC<MapModalProps> = ({ isOpen, onClose, lat, lng, title, l
             )}
 
             {buyerLat && buyerLng && (
-              <RoutingMachine 
-                buyerLat={buyerLat} 
-                buyerLng={buyerLng} 
-                sellerLat={lat} 
-                sellerLng={lng} 
+              <RoutingMachine
+                buyerLat={buyerLat}
+                buyerLng={buyerLng}
+                sellerLat={lat}
+                sellerLng={lng}
               />
             )}
           </MapContainer>
         </div>
-        
-        <div className="p-6 bg-white border-t border-gray-100 flex items-center justify-between gap-4 shrink-0">
+
+        <div className="p-6 bg-white border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0">
           <a
             href={
               buyerLat && buyerLng
@@ -152,9 +152,9 @@ const MapModal: React.FC<MapModalProps> = ({ isOpen, onClose, lat, lng, title, l
             <MapPin size={20} />
             <span>{t('product.navigateMaps')}</span>
           </a>
-          <button 
+          <button
             onClick={onClose}
-            className="bg-gray-100 text-gray-700 font-bold px-10 py-4 rounded-2xl hover:bg-gray-200 transition-all active:scale-95"
+            className="bg-gray-100 text-gray-700 font-bold px-10 py-4 rounded-2xl hover:bg-gray-200 transition-all active:scale-95 w-full sm:w-auto"
           >
             {t('product.close')}
           </button>
